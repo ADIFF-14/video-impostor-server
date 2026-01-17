@@ -19,34 +19,45 @@ const palabras = [
   "Fiesta","Viaje","Vacaciones"
 ];
 
-let estadoJuego = {
+// ESTADO GLOBAL (CLAVE)
+let estado = {
   palabra: null,
-  impostorId: null
+  impostorId: null,
+  rondaActiva: false
 };
 
 io.on("connection", (socket) => {
   console.log("Jugador conectado:", socket.id);
 
   socket.on("join-game", () => {
-    if (!estadoJuego.palabra) {
-      estadoJuego.palabra =
+    // Si no hay ronda, se crea UNA SOLA VEZ
+    if (!estado.rondaActiva) {
+      estado.palabra =
         palabras[Math.floor(Math.random() * palabras.length)];
+      estado.impostorId = socket.id;
+      estado.rondaActiva = true;
 
-      estadoJuego.impostorId = socket.id;
-
-      console.log("Palabra:", estadoJuego.palabra);
-      console.log("Impostor:", estadoJuego.impostorId);
+      console.log("NUEVA RONDA");
+      console.log("Palabra:", estado.palabra);
+      console.log("Impostor:", estado.impostorId);
     }
 
     const rol =
-      socket.id === estadoJuego.impostorId
-        ? "IMPOSTOR"
-        : "CIUDADANO";
+      socket.id === estado.impostorId ? "IMPOSTOR" : "CIUDADANO";
 
     socket.emit("role", {
       rol,
-      palabra: rol === "CIUDADANO" ? estadoJuego.palabra : null
+      palabra: rol === "CIUDADANO" ? estado.palabra : null
     });
+  });
+
+  socket.on("reset-round", () => {
+    estado = {
+      palabra: null,
+      impostorId: null,
+      rondaActiva: false
+    };
+    console.log("Ronda reiniciada");
   });
 
   socket.on("disconnect", () => {
