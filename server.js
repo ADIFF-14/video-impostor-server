@@ -4,72 +4,29 @@ const { Server } = require("socket.io");
 
 const app = express();
 const server = http.createServer(app);
+const io = new Server(server, { cors: { origin: "*" } });
 
-const io = new Server(server, {
-  cors: { origin: "*" }
-});
+const palabras = ["Pan","Ciudad","Avión","Playa","Hospital"];
 
-const palabras = [
-  "Avión","Playa","Hospital","Escuela","Restaurante",
-  "Banco","Iglesia","Hotel","Cine","Parque",
-  "Carro","Autobús","Bicicleta","Barco","Tren",
-  "Celular","Computadora","Televisión","Cámara",
-  "Pizza","Hamburguesa","Arroz","Pollo",
-  "Fútbol","Baloncesto","Béisbol",
-  "Fiesta","Viaje","Vacaciones"
-];
-
-// ESTADO GLOBAL (CLAVE)
-let estado = {
-  palabra: null,
-  impostorId: null,
-  rondaActiva: false
-};
+let palabraGlobal = null;
 
 io.on("connection", (socket) => {
-  console.log("Jugador conectado:", socket.id);
 
-  socket.on("join-game", () => {
-    // Si no hay ronda, se crea UNA SOLA VEZ
-    if (!estado.rondaActiva) {
-      estado.palabra =
-        palabras[Math.floor(Math.random() * palabras.length)];
-      estado.impostorId = socket.id;
-      estado.rondaActiva = true;
-
-      console.log("NUEVA RONDA");
-      console.log("Palabra:", estado.palabra);
-      console.log("Impostor:", estado.impostorId);
+  socket.on("join", () => {
+    if (!palabraGlobal) {
+      palabraGlobal = palabras[Math.floor(Math.random() * palabras.length)];
     }
 
-    const rol =
-      socket.id === estado.impostorId ? "IMPOSTOR" : "CIUDADANO";
-
-    socket.emit("role", {
-      rol,
-      palabra: rol === "CIUDADANO" ? estado.palabra : null
-    });
+    socket.emit("palabra", palabraGlobal);
   });
 
-  socket.on("reset-round", () => {
-    estado = {
-      palabra: null,
-      impostorId: null,
-      rondaActiva: false
-    };
-    console.log("Ronda reiniciada");
-  });
-
-  socket.on("disconnect", () => {
-    console.log("Jugador desconectado:", socket.id);
+  socket.on("reset", () => {
+    palabraGlobal = null;
   });
 });
 
 app.get("/", (req, res) => {
-  res.send("Servidor VideoImpostor funcionando ✅");
+  res.send("Servidor OK");
 });
 
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log("Servidor escuchando en puerto", PORT);
-});
+server.listen(process.env.PORT || 3000);
