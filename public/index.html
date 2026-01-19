@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <title>VideoImpostor</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <script src="https://meet.google.com/extensions/v1/sdk.js"></script>
+  
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -29,8 +32,9 @@
 
   <section id="end" class="screen">
     <h2>🕵️ Debate en Meet</h2>
+    <p>¡Discute con tus amigos quién es el impostor!</p>
     <button onclick="reveal()">🔍 Revelar palabra</button>
-    <p id="revealText" style="font-size:24px; margin-top:20px; color:#00e676;"></p>
+    <p id="revealText" style="font-size:24px; margin-top:20px; color:#00e676; font-weight:bold;"></p>
     <button id="adminNextBtn" style="display:none; background:#ffeb3b; color:black;" onclick="newRound()">🔁 Nueva ronda</button>
   </section>
 </div>
