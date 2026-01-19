@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>VideoImpostor</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div id="app">
+  <section id="welcome" class="screen active">
+    <h1>👋 Hola, soy Anderson</h1>
+    <p>Bienvenido a <b>VideoImpostor</b></p>
+    <button onclick="entrarJuego()">Entrar al juego</button>
+  </section>
+
+  <section id="waiting" class="screen">
+    <h2>Conectado</h2>
+    <p>Esperando a que Anderson inicie...</p>
+    <p>Jugadores en sala: <span id="count">0</span></p>
+    <button id="adminBtn" style="display:none; background:#ffeb3b; color:black;" onclick="newRound()">🚀 INICIAR PARTIDA</button>
+  </section>
+
+  <section id="role" class="screen">
+    <h2 id="roleTitle"></h2>
+    <p id="roleText"></p>
+    <button onclick="finishRound()">Listo, ya lo vi</button>
+  </section>
+
+  <section id="end" class="screen">
+    <h2>🕵️ Debate en Meet</h2>
+    <button onclick="reveal()">🔍 Revelar palabra</button>
+    <p id="revealText" style="font-size:24px; margin-top:20px; color:#00e676;"></p>
+    <button id="adminNextBtn" style="display:none; background:#ffeb3b; color:black;" onclick="newRound()">🔁 Nueva ronda</button>
+  </section>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
