@@ -1,18 +1,19 @@
-const socket = io();
-let palabraActual = "";
-let esAdmin = false;
+console.log("Script cargado correctamente");
+const socket = io(); 
 
 function showScreen(id) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
+  const next = document.getElementById(id);
+  if(next) next.classList.add("active");
 }
 
 function entrarJuego() {
+  console.log("Botón Entrar presionado");
   const nombre = prompt("Tu nombre:") || "Jugador";
-  if(nombre.toLowerCase() === "anderson") esAdmin = true;
   socket.emit('unirse', nombre);
   showScreen("waiting");
-  if(esAdmin) {
+  
+  if(nombre.toLowerCase() === "anderson") {
     document.getElementById("adminBtn").style.display = "block";
     document.getElementById("adminNextBtn").style.display = "block";
   }
@@ -23,18 +24,16 @@ socket.on('actualizarLista', (num) => {
 });
 
 socket.on('recibirRol', (data) => {
-  document.getElementById("revealText").innerText = "";
   if (data.rol === "IMPOSTOR") {
     document.getElementById("roleTitle").innerText = "🔴 IMPOSTOR";
-    document.getElementById("roleText").innerHTML = "¡MIENTE!";
+    document.getElementById("roleText").innerText = "¡Miente! No sabes la palabra.";
   } else {
-    palabraActual = data.palabra;
     document.getElementById("roleTitle").innerText = "🟢 Ciudadano";
-    document.getElementById("roleText").innerHTML = `Palabra: ${data.palabra}`;
+    document.getElementById("roleText").innerText = "Palabra: " + data.palabra;
   }
   showScreen("role");
 });
 
 function finishRound() { showScreen("end"); }
-function reveal() { document.getElementById("revealText").innerText = "Era: " + (palabraActual || "???"); }
+function reveal() { document.getElementById("revealText").innerText = "La palabra era secreta."; }
 function newRound() { socket.emit('iniciarRonda'); }
