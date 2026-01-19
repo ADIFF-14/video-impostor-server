@@ -9,7 +9,14 @@ const io = new Server(server);
 app.use(express.static('public'));
 
 let jugadores = [];
-const palabras = ["Avión", "Pizza", "Playa", "Cine", "Fútbol", "WhatsApp", "Hospital", "Perro", "Gato", "Hamburgesa", "Escuela"];
+const palabras = [
+    "Avión", "Pizza", "Playa", "Cine", "Fútbol", "WhatsApp", "Hospital", "Perro", 
+    "Gato", "Hamburguesa", "Escuela", "Astronauta", "Biblioteca", "Bicicleta", 
+    "Castillo", "Chocolate", "Dinosaurio", "Elefante", "Estrella", "Fantasma", 
+    "Guitarra", "Helado", "Isla", "Jirafa", "Ketchup", "Limón", "Mago", 
+    "Nieve", "Océano", "Panadería", "Parque", "Queso", "Robot", "Selva", 
+    "Tiburón", "Unicornio", "Vampiro", "Zoológico", "YouTube", "Netflix",
+    "Batman", "Minecraft", "Supermercado", "Internet", "Teléfono", "Reloj"
 
 io.on('connection', (socket) => {
     socket.on('unirse', (nombre) => {
