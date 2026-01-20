@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
     <script src="https://meet.google.com/extensions/v1/sdk.js"></script>
-    
     <link rel="stylesheet" href="style.css" />
     
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
@@ -39,46 +38,14 @@
     <section id="role" class="screen">
         <h2 id="roleTitle"></h2>
         <div id="roleBox" style="background: #222; padding: 20px; border-radius: 10px; margin: 20px 0;">
-            <p id="roleText"></p>
+            <p id="roleText" style="font-size: 24px;"></p>
         </div>
         <button onclick="irALosTurnos()">Listo, ya lo vi</button>
     </section>
 
     <section id="turnScreen" class="screen">
-        <h2>📢 Ronda de Pistas</h2>
-        <p>Habla en tu turno y describe tu palabra.</p>
+        <h2>🔍 Análisis de Sospechosos</h2>
         
-        <div id="activeSpeakerContainer">
-            <p style="margin-bottom: 5px; opacity: 0.8;">Le toca a:</p>
-            <h1 id="currentSpeakerName">---</h1>
-        </div>
+        <div id="grid-jugadores" class="player-grid" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 20px;"></div>
 
-        <button id="btnFinalizarTurno" style="display:none; background:#00e676;" onclick="finalizarMiTurno()">
-            ✅ He terminado de hablar
-        </button>
-        
-        <p style="font-size: 12px; margin-top: 15px; opacity: 0.6;">
-            * El micrófono está abierto para todos, mantengan el orden.
-        </p>
-    </section>
-
-    <section id="end" class="screen">
-        <h2>🕵️ Debate y Votación</h2>
-        <p>¡Discute con tus amigos quién es el impostor!</p>
-        
-        <button onclick="reveal()" style="background: #03a9f4;">🔍 Revelar palabra</button>
-        
-        <div id="revealBox" style="margin-top: 20px;">
-            <p id="revealText" style="font-size:24px; color:#00e676; font-weight:bold;"></p>
-        </div>
-
-        <button id="adminNextBtn" style="display:none; background:#ffeb3b; color:black;" onclick="newRound()">
-            🔁 Nueva ronda
-        </button>
-    </section>
-</div>
-
-<script src="script.js"></script>
-
-</body>
-</html>
+        <div id="active
