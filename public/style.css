@@ -1,38 +1,21 @@
-body {
-  margin: 0; background-color: #0b0b0b; color: white;
-  font-family: Arial, sans-serif; display: flex;
-  justify-content: center; align-items: center; height: 100vh; overflow: hidden;
-}
+body { margin: 0; background: #0e0e0e; color: white; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+#app { width: 100%; max-width: 400px; text-align: center; }
+.screen { display: none; background: #1a1a1a; padding: 30px; border-radius: 20px; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+.screen.active { display: block; animation: fadeIn 0.4s; }
 
-#app { width: 100%; max-width: 400px; text-align: center; padding: 20px; }
+/* CUADRÍCULA DE JUGADORES */
+.player-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 20px 0; }
+.cuadrito { background: #2a2a2a; border: 2px solid #444; border-radius: 12px; padding: 12px 5px; font-size: 13px; transition: 0.3s; }
+.cuadrito.activo { background: #00e676; color: black; border-color: white; transform: scale(1.1); font-weight: bold; box-shadow: 0 0 15px #00e676; }
+.cuadrito.muerto { opacity: 0.3; filter: grayscale(1); border: 2px dashed red; }
 
-.screen { display: none; animation: fadeIn 0.3s ease; }
-.screen.active { display: block; }
+/* FRASE */
+.frase-box { background: #000; padding: 25px; border-radius: 15px; margin: 20px 0; border: 2px solid #00e676; }
+#roleText { font-size: 32px; font-weight: bold; color: #00e676; margin: 10px 0; }
 
-section { background: #181818; padding: 25px; border-radius: 20px; border: 1px solid #333; }
+#activeSpeakerContainer { border: 3px solid #ffeb3b; padding: 20px; border-radius: 15px; margin-bottom: 20px; background: #222; }
+button { background: #00e676; color: black; border: none; padding: 15px; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; margin-top: 10px; transition: 0.2s; }
+button:hover { background: #00ff84; transform: scale(1.02); }
+.btn-voto { background: #333; color: white; border: 1px solid #555; font-size: 14px; margin: 5px; }
 
-.player-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 20px; }
-
-.cuadrito-jugador {
-  background: #252525; border: 2px solid #444; border-radius: 10px;
-  padding: 10px; font-size: 12px; transition: 0.3s;
-}
-
-.cuadrito-jugador.activo {
-  background: #00e676; color: black; transform: scale(1.1); box-shadow: 0 0 15px #00e676;
-}
-
-.cuadrito-jugador.muerto { opacity: 0.3; border-color: red; filter: grayscale(1); }
-
-#activeSpeakerContainer {
-  border: 4px solid #ffeb3b; padding: 20px; border-radius: 15px; margin: 20px 0;
-}
-
-button {
-  background: #00e676; color: black; border: none; padding: 15px;
-  font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; margin-top: 10px;
-}
-
-.btn-voto { background: #333; color: white; border: 1px solid #555; margin: 5px; width: auto; }
-
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
