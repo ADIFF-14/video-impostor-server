@@ -1,75 +1,126 @@
-/* Reset general */
+/* Reset y Base */
 body {
-  margin: 0;
-  padding: 0;
-  background-color: #121212; /* Fondo oscuro tipo Among Us */
+  margin: 0; padding: 0;
+  background-color: #0b0b0b;
   color: white;
-  font-family: 'Arial', sans-serif;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  overflow: hidden;
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  display: flex; justify-content: center; align-items: center;
+  height: 100vh; overflow: hidden;
 }
 
-#app {
-  width: 100%;
-  max-width: 400px;
-  text-align: center;
-  padding: 20px;
-}
+#app { width: 100%; max-width: 450px; text-align: center; padding: 15px; }
 
-/* OCULTAR PANTALLAS */
-.screen {
-  display: none; /* Esconde todas las secciones por defecto */
-  animation: fadeIn 0.3s ease-in-out;
-}
+/* Sistema de Pantallas */
+.screen { display: none; animation: fadeIn 0.4s ease; }
+.screen.active { display: block; }
 
-/* MOSTRAR SOLO LA ACTIVA */
-.screen.active {
-  display: block; /* Solo muestra la que tiene la clase 'active' */
-}
-
-/* Estilo de los contenedores */
 section {
-  background: #1e1e1e;
-  padding: 30px;
-  border-radius: 20px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.8);
+  background: #181818;
+  padding: 25px;
+  border-radius: 25px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.9);
   border: 1px solid #333;
 }
 
-/* Botones modernos */
-button {
+/* CUADRÍCULA DE JUGADORES (Arriba) */
+.player-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 10px;
+}
+
+.cuadrito-jugador {
+  background: #252525;
+  border: 2px solid #444;
+  border-radius: 12px;
+  padding: 10px 5px;
+  font-size: 13px;
+  transition: all 0.3s ease;
+  color: #bbb;
+}
+
+/* El que tiene el turno resalta y brilla */
+.cuadrito-jugador.activo {
   background: #00e676;
   color: black;
-  border: none;
-  padding: 15px 25px;
-  font-size: 18px;
   font-weight: bold;
-  border-radius: 10px;
+  border-color: white;
+  transform: scale(1.1);
+  box-shadow: 0 0 15px #00e676;
+}
+
+/* El que fue expulsado se ve como fantasma */
+.cuadrito-jugador.muerto {
+  opacity: 0.3;
+  filter: grayscale(1);
+  border: 2px dashed #ff5252;
+}
+
+/* CONTENEDOR CENTRAL (El Escenario) */
+#activeSpeakerContainer {
+  border: 4px solid #ffeb3b;
+  margin: 25px 0;
+  padding: 30px;
+  border-radius: 20px;
+  background: linear-gradient(145deg, #222, #111);
+  box-shadow: 0 0 30px rgba(255, 235, 59, 0.2);
+  animation: pulse 2s infinite;
+}
+
+#currentSpeakerName {
+  font-size: 35px;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+/* BOTONES */
+button {
+  background: #00e676;
+  color: #000;
+  border: none;
+  padding: 16px;
+  font-size: 18px;
+  font-weight: 900;
+  border-radius: 12px;
   cursor: pointer;
   width: 100%;
-  margin-top: 20px;
+  margin-top: 15px;
   transition: 0.2s;
 }
 
-button:hover {
-  background: #00c864;
-  transform: scale(1.02);
+button:hover { background: #00ff84; transform: scale(1.03); }
+
+.btn-voto {
+  background: #333;
+  color: white;
+  border: 1px solid #555;
+  font-size: 14px;
 }
 
-/* Animación de entrada */
+.btn-voto:hover { background: #ff5252; border-color: white; }
+
+/* ANIMACIÓN DE FALLO TOTAL (Sacudida) */
+.shake {
+  animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+@keyframes shake {
+  10%, 90% { transform: translate3d(-1px, 0, 0); }
+  20%, 80% { transform: translate3d(2px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+  40%, 60% { transform: translate3d(4px, 0, 0); }
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 10px rgba(255, 235, 59, 0.2); }
+  50% { box-shadow: 0 0 30px rgba(255, 235, 59, 0.5); }
+  100% { box-shadow: 0 0 10px rgba(255, 235, 59, 0.2); }
+}
+
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
-}
-
-/* Resalte del turno */
-#activeSpeakerContainer {
-  border: 3px solid #ffeb3b;
-  margin: 20px 0;
-  padding: 20px;
-  border-radius: 15px;
-  background: #252525;
 }
