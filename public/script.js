@@ -2,7 +2,6 @@ const socket = io();
 const peer = new Peer();
 let miStream, miNombre, esAdmin = false, micActivo = true;
 
-// 1. Audio robusto
 navigator.mediaDevices.getUserMedia({ audio: true }).then(s => {
     miStream = s;
     actualizarIconoMic();
@@ -26,7 +25,6 @@ socket.on('listaParaAudio', (jugadores) => {
     });
 });
 
-// 2. Funciones de juego
 function entrarJuego() {
     const input = document.getElementById("userName");
     miNombre = input.value || "Jugador_" + Math.floor(Math.random()*100);
@@ -59,7 +57,6 @@ socket.on('recibirRol', (data) => {
 });
 
 function irALosTurnos() {
-    // Si Anderson le da, inicia para todos. Si un jugador le da, solo espera.
     if(esAdmin) socket.emit('listoParaHablar');
     showScreen("turnScreen");
 }
@@ -96,8 +93,13 @@ socket.on('faseVotacion', (vivos) => {
 socket.on('resultadoVotacion', (res) => {
     showScreen("result");
     document.getElementById("texto-res").innerText = res.mensaje;
-    document.getElementById("texto-palabra").innerText = res.terminar ? "Frase: " + res.palabraReal : "";
-    if(!res.terminar) setTimeout(() => socket.emit('listoParaHablar'), 4000);
+    if (res.terminar) {
+        document.getElementById("texto-palabra").innerText = "La frase era: " + res.palabraReal;
+        if (esAdmin) document.getElementById("btnNext").style.display = "block";
+    } else {
+        document.getElementById("texto-palabra").innerText = "Preparando siguiente ronda...";
+        setTimeout(() => { if(esAdmin) socket.emit('listoParaHablar'); }, 4000);
+    }
 });
 
 function showScreen(id) {
@@ -105,4 +107,5 @@ function showScreen(id) {
     document.getElementById(id).classList.add("active");
 }
 
+socket.on('actualizarLista', (n) => { document.getElementById("count").innerText = n; });
 
