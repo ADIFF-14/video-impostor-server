@@ -1,21 +1,16 @@
-body { margin: 0; background: #0e0e0e; color: white; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+body { margin: 0; background: #0e0e0e; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
 #app { width: 100%; max-width: 400px; text-align: center; }
-.screen { display: none; background: #1a1a1a; padding: 30px; border-radius: 20px; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-.screen.active { display: block; animation: fadeIn 0.4s; }
+.screen { display: none; background: #1a1a1a; padding: 30px; border-radius: 20px; border: 1px solid #333; }
+.screen.active { display: block; }
 
-/* CUADRÍCULA DE JUGADORES */
 .player-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 20px 0; }
-.cuadrito { background: #2a2a2a; border: 2px solid #444; border-radius: 12px; padding: 12px 5px; font-size: 13px; transition: 0.3s; }
-.cuadrito.activo { background: #00e676; color: black; border-color: white; transform: scale(1.1); font-weight: bold; box-shadow: 0 0 15px #00e676; }
+.cuadrito { background: #2a2a2a; border: 2px solid #444; border-radius: 12px; padding: 12px 5px; font-size: 13px; }
+.cuadrito.activo { background: #00e676; color: black; border-color: white; transform: scale(1.1); font-weight: bold; }
 .cuadrito.muerto { opacity: 0.3; filter: grayscale(1); border: 2px dashed red; }
 
-/* FRASE */
 .frase-box { background: #000; padding: 25px; border-radius: 15px; margin: 20px 0; border: 2px solid #00e676; }
-#roleText { font-size: 32px; font-weight: bold; color: #00e676; margin: 10px 0; }
+#roleText { font-size: 32px; font-weight: bold; color: #00e676; }
 
-#activeSpeakerContainer { border: 3px solid #ffeb3b; padding: 20px; border-radius: 15px; margin-bottom: 20px; background: #222; }
-button { background: #00e676; color: black; border: none; padding: 15px; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; margin-top: 10px; transition: 0.2s; }
-button:hover { background: #00ff84; transform: scale(1.02); }
-.btn-voto { background: #333; color: white; border: 1px solid #555; font-size: 14px; margin: 5px; }
-
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+#activeSpeakerContainer { border: 3px solid #ffeb3b; padding: 20px; border-radius: 15px; margin-bottom: 20px; }
+button { background: #00e676; color: black; border: none; padding: 15px; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; margin-top: 10px; }
+.btn-voto { background: #333; color: white; border: 1px solid #555; margin: 5px; }
