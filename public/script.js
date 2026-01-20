@@ -4,7 +4,6 @@ let miStream, miNombre, esAdmin = false, micActivo = true;
 
 navigator.mediaDevices.getUserMedia({ audio: true }).then(s => {
     miStream = s;
-    actualizarIconoMic();
     peer.on('call', call => {
         call.answer(miStream);
         call.on('stream', rem => playStream(rem));
@@ -41,25 +40,18 @@ function enviarUnion() {
 function toggleMic() {
     micActivo = !micActivo;
     if (miStream) miStream.getAudioTracks()[0].enabled = micActivo;
-    actualizarIconoMic();
-}
-
-function actualizarIconoMic() {
     const btn = document.getElementById("micBtn");
     btn.innerHTML = micActivo ? "🎤" : "🔇";
     btn.className = micActivo ? "btn-mute" : "btn-mute muted";
 }
 
 socket.on('recibirRol', (data) => {
-    document.getElementById("roleTitle").innerText = (data.rol === "IMPOSTOR") ? "🔴 IMPOSTOR" : "🟢 CIUDADANO";
-    document.getElementById("roleText").innerText = (data.rol === "IMPOSTOR") ? "Miente!" : data.palabra;
+    document.getElementById("roleTitle").innerText = (data.rol === "IMPOSTOR") ? "ERES EL IMPOSTOR" : "TU FRASE ES:";
+    document.getElementById("roleText").innerText = (data.rol === "IMPOSTOR") ? "Miente para sobrevivir" : data.palabra;
     showScreen("role");
+    // Anderson tiene el botón para iniciar debate cuando todos terminen de leer
+    if (esAdmin) document.getElementById("startDebateBtn").style.display = "block";
 });
-
-function irALosTurnos() {
-    if(esAdmin) socket.emit('listoParaHablar');
-    showScreen("turnScreen");
-}
 
 socket.on('cambioDeTurno', (data) => {
     showScreen("turnScreen");
@@ -82,9 +74,9 @@ socket.on('faseVotacion', (vivos) => {
     vivos.forEach(j => {
         if(j.id !== socket.id) {
             const b = document.createElement("button");
-            b.className = "btn-voto";
+            b.style.marginBottom = "10px";
             b.innerText = `Votar a ${j.nombre}`;
-            b.onclick = () => { socket.emit('votarJugador', j.id); lista.innerHTML = "Esperando..."; };
+            b.onclick = () => { socket.emit('votarJugador', j.id); lista.innerHTML = "Voto enviado..."; };
             lista.appendChild(b);
         }
     });
@@ -93,12 +85,13 @@ socket.on('faseVotacion', (vivos) => {
 socket.on('resultadoVotacion', (res) => {
     showScreen("result");
     document.getElementById("texto-res").innerText = res.mensaje;
+    document.getElementById("texto-palabra").innerText = res.terminar ? "La frase era: " + res.palabraReal : "";
+    
+    // Si la partida terminó, Anderson puede reiniciar. Si no, esperamos 8 seg.
     if (res.terminar) {
-        document.getElementById("texto-palabra").innerText = "La frase era: " + res.palabraReal;
         if (esAdmin) document.getElementById("btnNext").style.display = "block";
     } else {
-        document.getElementById("texto-palabra").innerText = "Preparando siguiente ronda...";
-        setTimeout(() => { if(esAdmin) socket.emit('listoParaHablar'); }, 4000);
+        setTimeout(() => { if(esAdmin) socket.emit('empezarDebateOficial'); }, 8000);
     }
 });
 
@@ -108,4 +101,5 @@ function showScreen(id) {
 }
 
 socket.on('actualizarLista', (n) => { document.getElementById("count").innerText = n; });
+
 
