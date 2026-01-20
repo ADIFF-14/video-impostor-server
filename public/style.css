@@ -1,66 +1,75 @@
-/* Configuración General */
+/* Reset general */
 body {
   margin: 0;
   padding: 0;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #1a1a1a; /* Fondo oscuro */
+  background-color: #121212; /* Fondo oscuro tipo Among Us */
   color: white;
+  font-family: 'Arial', sans-serif;
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
-  text-align: center;
+  overflow: hidden;
 }
 
 #app {
-  width: 90%;
+  width: 100%;
   max-width: 400px;
+  text-align: center;
+  padding: 20px;
 }
 
-/* OCULTAR PANTALLAS: Esta es la clave */
+/* OCULTAR PANTALLAS */
 .screen {
-  display: none; /* Por defecto, todas ocultas */
-  background: #2a2a2a;
-  padding: 20px;
-  border-radius: 15px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+  display: none; /* Esconde todas las secciones por defecto */
+  animation: fadeIn 0.3s ease-in-out;
 }
 
 /* MOSTRAR SOLO LA ACTIVA */
 .screen.active {
-  display: block; /* Solo se ve la que tiene la clase 'active' */
-  animation: fadeIn 0.5s ease-in-out;
+  display: block; /* Solo muestra la que tiene la clase 'active' */
 }
 
-/* Botones estilo juego */
+/* Estilo de los contenedores */
+section {
+  background: #1e1e1e;
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.8);
+  border: 1px solid #333;
+}
+
+/* Botones modernos */
 button {
-  background-color: #00e676;
+  background: #00e676;
   color: black;
   border: none;
-  padding: 12px 25px;
+  padding: 15px 25px;
   font-size: 18px;
   font-weight: bold;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
-  margin-top: 20px;
   width: 100%;
-  transition: transform 0.2s;
+  margin-top: 20px;
+  transition: 0.2s;
 }
 
 button:hover {
-  transform: scale(1.05);
+  background: #00c864;
+  transform: scale(1.02);
 }
 
 /* Animación de entrada */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
+  from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Estilo especial para el que habla */
+/* Resalte del turno */
 #activeSpeakerContainer {
-  background: #333;
   border: 3px solid #ffeb3b;
+  margin: 20px 0;
   padding: 20px;
-  border-radius: 12px;
+  border-radius: 15px;
+  background: #252525;
 }
