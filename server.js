@@ -98,12 +98,12 @@ io.on('connection', (socket) => {
             if (rondaActual < 3) {
                 rondaActual++;
                 io.emit('resultadoVotacion', { 
-                    mensaje: `¡SE EQUIVOCARON! ${expulsado.nombre} recibió ${maxVotos} votos y era inocente. El impostor sigue suelto... 😈`, 
+                    mensaje: `¡SE EQUIVOCARON! ${expulsado.nombre} recibió ${maxVotos} votos y era inocente. El impostor sigue suelto... `, 
                     terminar: false 
                 });
             } else {
                 io.emit('resultadoVotacion', { 
-                    mensaje: `¡EL IMPOSTOR HA GANADO! Sobrevivió las 3 rondas. 💀`, 
+                    mensaje: `¡EL IMPOSTOR HA GANADO! Sobrevivió las 3 rondas.`, 
                     terminar: true, palabraReal: palabraActual 
                 });
             }
