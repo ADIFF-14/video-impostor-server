@@ -1,51 +1,42 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8" />
-    <title>VideoImpostor</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    
-    <script src="https://meet.google.com/extensions/v1/sdk.js"></script>
-    <link rel="stylesheet" href="style.css" />
-    
+    <meta charset="UTF-8"><title>VideoImpostor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
-
 <div id="app">
     <section id="welcome" class="screen active">
         <h1>👋 VideoImpostor</h1>
-        <p>Bienvenido a la sala de <b>Anderson</b></p>
-        <div style="margin: 20px 0;">
-            <input type="text" id="userName" placeholder="Escribe tu nombre..." 
-                style="padding: 10px; border-radius: 5px; border: none; width: 80%;">
-        </div>
-        <button onclick="entrarJuego()">Entrar al juego</button>
+        <input type="text" id="userName" placeholder="Nombre...">
+        <button onclick="entrarJuego()">Entrar</button>
     </section>
-
     <section id="waiting" class="screen">
         <h2>Conectado</h2>
-        <p>Esperando a que Anderson inicie la partida...</p>
-        <div style="background: #333; padding: 15px; border-radius: 10px; margin: 20px 0;">
-            <p>Jugadores en sala: <span id="count" style="font-weight: bold; color: #00e676;">0</span></p>
-        </div>
-        <button id="adminBtn" style="display:none; background:#ffeb3b; color:black;" onclick="newRound()">
-            🚀 INICIAR PARTIDA
-        </button>
+        <p>Jugadores: <span id="count">0</span></p>
+        <button id="adminBtn" style="display:none" onclick="newRound()">INICIAR</button>
     </section>
-
     <section id="role" class="screen">
-        <h2 id="roleTitle"></h2>
-        <div id="roleBox" style="background: #222; padding: 20px; border-radius: 10px; margin: 20px 0;">
-            <p id="roleText" style="font-size: 24px;"></p>
-        </div>
-        <button onclick="irALosTurnos()">Listo, ya lo vi</button>
+        <h2 id="roleTitle"></h2><p id="roleText"></p>
+        <button onclick="irALosTurnos()">LISTO</button>
     </section>
-
     <section id="turnScreen" class="screen">
-        <h2>🔍 Análisis de Sospechosos</h2>
-        
-        <div id="grid-jugadores" class="player-grid" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 20px;"></div>
-
-        <div id="active
+        <div id="grid-jugadores" class="player-grid"></div>
+        <div id="activeSpeakerContainer"><h1 id="currentSpeakerName">---</h1></div>
+        <button id="btnFinalizarTurno" onclick="finalizarMiTurno()">TERMINÉ</button>
+    </section>
+    <section id="end" class="screen">
+        <h2 id="voteStatus">VOTA POR EL IMPOSTOR</h2>
+        <div id="lista-votacion" class="player-grid"></div>
+        <div id="resultado-final" style="display:none">
+            <h1 id="texto-expulsado"></h1><h2 id="texto-revelacion"></h2>
+            <button id="adminNextBtn" style="display:none" onclick="newRound()">NUEVA RONDA</button>
+        </div>
+    </section>
+</div>
+<script src="script.js"></script>
+</body>
+</html>
