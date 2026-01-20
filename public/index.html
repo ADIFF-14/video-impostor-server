@@ -11,25 +11,33 @@
 <div id="app">
     <section id="welcome" class="screen active">
         <h1>👋 VideoImpostor</h1>
-        <input type="text" id="userName" placeholder="Nombre...">
-        <button onclick="entrarJuego()">Entrar</button>
+        <input type="text" id="userName" placeholder="Tu nombre...">
+        <button onclick="entrarJuego()">Entrar al juego</button>
     </section>
+
     <section id="waiting" class="screen">
-        <h2>Conectado</h2>
-        <p>Jugadores: <span id="count">0</span></p>
-        <button id="adminBtn" style="display:none" onclick="newRound()">INICIAR</button>
+        <h2>Esperando inicio...</h2>
+        <p>Jugadores: <b id="count">0</b></p>
+        <button id="adminBtn" style="display:none" onclick="newRound()">🚀 INICIAR</button>
     </section>
+
     <section id="role" class="screen">
-        <h2 id="roleTitle"></h2><p id="roleText"></p>
-        <button onclick="irALosTurnos()">LISTO</button>
+        <h1 id="roleTitle"></h1>
+        <div class="frase-box"><p id="roleText"></p></div>
+        <button onclick="irALosTurnos()">ESTOY LISTO</button>
     </section>
+
     <section id="turnScreen" class="screen">
         <div id="grid-jugadores" class="player-grid"></div>
-        <div id="activeSpeakerContainer"><h1 id="currentSpeakerName">---</h1></div>
+        <div id="activeSpeakerContainer">
+            <p>Hablando ahora:</p>
+            <h1 id="currentSpeakerName">---</h1>
+        </div>
         <button id="btnFinalizarTurno" onclick="finalizarMiTurno()">TERMINÉ</button>
     </section>
+
     <section id="end" class="screen">
-        <h2 id="voteStatus">VOTA POR EL IMPOSTOR</h2>
+        <h2 id="voteStatus">¿QUIÉN ES EL IMPOSTOR?</h2>
         <div id="lista-votacion" class="player-grid"></div>
         <div id="resultado-final" style="display:none">
             <h1 id="texto-expulsado"></h1><h2 id="texto-revelacion"></h2>
