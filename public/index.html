@@ -21,7 +21,7 @@
 
     <section id="waiting" class="screen">
         <h2>Sala de Espera</h2>
-        <p>Jugadores conectados: <span id="count">0</span></p>
+        <p>Jugadores en sala: <span id="count">0</span></p>
         <button id="adminBtn" style="display:none" class="btn-big" onclick="socket.emit('iniciarRonda')">🚀 INICIAR PARTIDA</button>
     </section>
 
@@ -29,7 +29,7 @@
         <h2 id="roleTitle" style="opacity:0.6; font-size:18px;"></h2>
         <h1 id="roleText" style="color:#00e676; font-size:48px; margin:20px 0; background:#000; padding:20px; border-radius:20px;"></h1>
         <p style="font-size:14px; opacity:0.5;">Espera a que Anderson inicie el debate...</p>
-        <button id="startDebateBtn" style="display:none; background:#ffeb3b; color:black;" class="btn-big" onclick="socket.emit('empezarDebateOficial')">INICIAR DEBATE</button>
+        <button id="startDebateBtn" style="display:none; background:#ffeb3b; color:black;" class="btn-big" onclick="irALosTurnos()">INICIAR DEBATE</button>
     </section>
 
     <section id="turnScreen" class="screen">
@@ -38,7 +38,7 @@
             <p style="opacity:0.5; margin:0; font-size:14px;">Hablando ahora:</p>
             <h1 id="currentSpeakerName" style="font-size:38px; margin:10px 0;">---</h1>
         </div>
-        <button id="btnFinalizarTurno" class="btn-big" style="margin-top:20px;" onclick="socket.emit('finalizarMiTurno')">TERMINAR TURNO</button>
+        <button id="btnFinalizarTurno" class="btn-big" style="margin-top:20px;" onclick="socket.emit('finalizarMiTurno')">TERMINAR DE HABLAR</button>
     </section>
 
     <section id="end" class="screen">
