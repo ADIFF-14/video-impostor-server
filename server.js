@@ -8,43 +8,72 @@ const io = new Server(server);
 app.use(express.static('public'));
 
 let jugadores = [];
+let ordenHablar = []; // Nueva lista para el orden aleatorio
 let indiceTurno = 0;
 let palabraActual = "";
 let votosRecibidos = {};
+let rondaActual = 1;
 
-const palabras = ["Pizza", "Avión", "WhatsApp", "Minecraft", "Netflix", "Fútbol", "Cine", "Playa"];
+const palabras = [
+    "Pizza", "Avión", "WhatsApp", "Netflix", "Fútbol", "Cine", "Playa", "Gato", "Reloj", "Bicicleta",
+    "Hamburgesa", "Internet", "Gimnasio", "Chocolate", "YouTube", "Instagram", "Parque", "Dormir", "Café", "Escuela",
+    "Teléfono", "Navidad", "Verano", "Bailar", "Música", "Fruta", "Helado", "Cerveza", "Libro", "Zapato",
+    "Carro", "Perro", "Luna", "Sol", "Estudiar", "Trabajo", "Dinero", "Viaje", "Maleta", "Cámara",
+    "Televisión", "Videojuego", "Sushi", "Tacos", "Guitarra", "Piscina", "Estadio", "Hospital", "Policía", "Bombero"
+];
+
+// Función para mezclar cualquier array (Algoritmo Fisher-Yates)
+function mezclar(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
 
 io.on('connection', (socket) => {
     socket.on('unirse', (datos) => {
-        jugadores.push({ 
-            id: socket.id, 
-            nombre: datos.nombre, 
-            peerId: datos.peerId, 
-            eliminado: false,
-            rol: "" 
-        });
+        jugadores.push({ id: socket.id, nombre: datos.nombre, peerId: datos.peerId, eliminado: false, rol: "" });
         io.emit('actualizarLista', jugadores.length);
-        io.emit('listaParaAudio', jugadores); 
     });
 
     socket.on('iniciarRonda', () => {
-        if (jugadores.length < 2) return;
-        indiceTurno = 0;
-        votosRecibidos = {};
-        palabraActual = palabras[Math.floor(Math.random() * palabras.length)];
-        const impIndex = Math.floor(Math.random() * jugadores.length);
+        if (jugadores.length < 3) return;
+        rondaActual = 1;
         
-        jugadores.forEach((j, i) => {
-            j.eliminado = false;
-            j.rol = (i === impIndex) ? "IMPOSTOR" : "CIUDADANO";
+        // 1. Elegir impostor al azar (reseteando a todos primero)
+        jugadores.forEach(j => { j.eliminado = false; j.rol = "CIUDADANO"; });
+        const impIndex = Math.floor(Math.random() * jugadores.length);
+        jugadores[impIndex].rol = "IMPOSTOR";
+
+        // 2. Elegir frase al azar
+        palabraActual = palabras[Math.floor(Math.random() * palabras.length)];
+
+        // 3. Crear un ORDEN DE HABLAR aleatorio
+        ordenHablar = mezclar([...jugadores]); 
+
+        // 4. Enviar roles individualmente
+        jugadores.forEach((j) => {
             const info = (j.rol === "IMPOSTOR") ? { rol: "IMPOSTOR" } : { rol: "CIUDADANO", palabra: palabraActual };
             io.to(j.id).emit('recibirRol', info);
         });
+
+        iniciarNuevaFase(false); // false porque ya repartimos roles arriba
     });
 
-    socket.on('listoParaHablar', () => {
-        notificarTurno();
-    });
+    function iniciarNuevaFase(esNuevaRondaDeVoto) {
+        indiceTurno = 0;
+        votosRecibidos = {};
+        
+        // Si es una nueva ronda porque fallaron el voto, mezclamos el orden de nuevo para que no sea igual
+        if (esNuevaRondaDeVoto) {
+            ordenHablar = mezclar(ordenHablar.filter(j => !j.eliminado));
+        }
+
+        io.emit('notificarRonda', rondaActual);
+    }
+
+    socket.on('listoParaHablar', () => { notificarTurno(); });
 
     socket.on('finalizarMiTurno', () => {
         indiceTurno++;
@@ -54,9 +83,7 @@ io.on('connection', (socket) => {
     socket.on('votarJugador', (idVotado) => {
         votosRecibidos[idVotado] = (votosRecibidos[idVotado] || 0) + 1;
         const vivos = jugadores.filter(j => !j.eliminado).length;
-        const totalVotos = Object.values(votosRecibidos).reduce((a, b) => a + b, 0);
-
-        if (totalVotos >= vivos) {
+        if (Object.values(votosRecibidos).reduce((a, b) => a + b, 0) >= vivos) {
             procesarVotacion();
         }
     });
@@ -64,41 +91,45 @@ io.on('connection', (socket) => {
     function procesarVotacion() {
         const expulsadoId = Object.keys(votosRecibidos).reduce((a, b) => votosRecibidos[a] > votosRecibidos[b] ? a : b);
         const expulsado = jugadores.find(j => j.id === expulsadoId);
+        if(!expulsado) return;
         expulsado.eliminado = true;
 
         if (expulsado.rol === "IMPOSTOR") {
             io.emit('resultadoVotacion', { 
-                mensaje: `¡TE ATRAPAMOS, ${expulsado.nombre.toUpperCase()}! 🔴`, 
+                mensaje: `¡TE ATRAPAMOS! ${expulsado.nombre} era el impostor 🔴`, 
                 terminar: true, 
                 palabraReal: palabraActual 
             });
         } else {
-            const vivos = jugadores.filter(j => !j.eliminado);
-            if (vivos.length <= 2) {
+            if (rondaActual < 3) {
+                rondaActual++;
                 io.emit('resultadoVotacion', { 
-                    mensaje: "¡FALLO TOTAL! El impostor ganó. 💀", 
+                    mensaje: `¡SE EQUIVOCARON! ${expulsado.nombre} era inocente. El impostor sigue suelto... 😈`, 
+                    terminar: false 
+                });
+                setTimeout(() => { iniciarNuevaFase(true); }, 4000);
+            } else {
+                io.emit('resultadoVotacion', { 
+                    mensaje: "¡EL IMPOSTOR HA GANADO! Sobrevivió las 3 rondas. 💀", 
                     terminar: true, 
                     palabraReal: palabraActual 
                 });
-            } else {
-                io.emit('resultadoVotacion', { 
-                    mensaje: `¡NOS EQUIVOCAMOS! ${expulsado.nombre} era inocente. El impostor sigue suelto... 😈`, 
-                    terminar: false 
-                });
-                setTimeout(() => { indiceTurno = 0; notificarTurno(); }, 4000);
             }
         }
         votosRecibidos = {};
     }
 
     function notificarTurno() {
-        while (indiceTurno < jugadores.length && jugadores[indiceTurno].eliminado) { indiceTurno++; }
-        
-        if (indiceTurno < jugadores.length) {
+        // Buscamos al siguiente en el orden que no esté eliminado
+        while (indiceTurno < ordenHablar.length && ordenHablar[indiceTurno].eliminado) { 
+            indiceTurno++; 
+        }
+
+        if (indiceTurno < ordenHablar.length) {
             io.emit('cambioDeTurno', { 
-                nombre: jugadores[indiceTurno].nombre, 
-                idSocket: jugadores[indiceTurno].id,
-                listaActualizada: jugadores 
+                nombre: ordenHablar[indiceTurno].nombre, 
+                idSocket: ordenHablar[indiceTurno].id, 
+                lista: ordenHablar 
             });
         } else {
             io.emit('faseVotacion', jugadores.filter(j => !j.eliminado));
@@ -107,8 +138,9 @@ io.on('connection', (socket) => {
 
     socket.on('disconnect', () => {
         jugadores = jugadores.filter(j => j.id !== socket.id);
+        ordenHablar = ordenHablar.filter(j => j.id !== socket.id);
         io.emit('actualizarLista', jugadores.length);
     });
 });
 
-server.listen(process.env.PORT || 3000, () => console.log("Servidor Online"));
+server.listen(process.env.PORT || 3000, () => console.log("Servidor con turnos e impostores aleatorios."));
