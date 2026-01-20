@@ -1,28 +1,38 @@
-body { margin: 0; background: #080808; color: white; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+body { margin: 0; background: #080808; color: white; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
 #app { width: 90%; max-width: 420px; text-align: center; position: relative; }
-.screen { display: none; background: #121212; padding: 30px; border-radius: 30px; border: 1px solid #222; }
-.screen.active { display: block; animation: fadeIn 0.4s; }
+.screen { display: none; background: #121212; padding: 30px; border-radius: 30px; border: 1px solid #222; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
+.screen.active { display: block; animation: fadeIn 0.4s ease-out; }
 
 /* Bienvenida */
-h1.main-title { font-size: 40px; letter-spacing: 5px; color: #00e676; margin-bottom: 5px; }
-.welcome-msg { font-size: 16px; opacity: 0.9; margin-bottom: 20px; }
+h1.main-title { font-size: 42px; letter-spacing: 4px; color: #00e676; margin-bottom: 10px; font-weight: 800; }
+.welcome-msg { font-size: 15px; opacity: 0.7; margin-bottom: 25px; line-height: 1.5; }
 
-/* Input Grande */
+/* Input Grande y Botón Anderson */
 .big-input { 
-    width: 100%; padding: 20px; font-size: 22px; border-radius: 15px; border: 2px solid #333;
-    background: #1a1a1a; color: white; text-align: center; margin-bottom: 20px; box-sizing: border-box;
+    width: 100%; padding: 20px; font-size: 22px; border-radius: 15px; border: 1px solid #333;
+    background: #1a1a1a; color: white; text-align: center; margin-bottom: 20px; box-sizing: border-box; outline: none;
 }
+.big-input:focus { border-color: #00e676; }
+.btn-big { background: #00e676; color: black; border: none; padding: 20px; font-weight: bold; border-radius: 15px; width: 100%; cursor: pointer; font-size: 20px; transition: 0.2s; }
+.btn-big:active { transform: scale(0.97); }
 
-.btn-big { background: #00e676; color: black; border: none; padding: 20px; font-weight: bold; border-radius: 15px; width: 100%; cursor: pointer; font-size: 20px; }
+/* VOTACIÓN MINIMALISTA VERTICAL */
+#lista-votacion { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+.btn-voto { 
+    background: rgba(255, 255, 255, 0.05); color: white; border: 1px solid rgba(255, 255, 255, 0.1); 
+    padding: 18px; border-radius: 15px; font-size: 18px; cursor: pointer; transition: 0.3s;
+    text-align: center; width: 100%; box-sizing: border-box;
+}
+.btn-voto:hover { background: rgba(255, 255, 255, 0.1); border-color: #00e676; }
 
-/* Juego */
-.player-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
-.cuadrito { background: #1e1e1e; padding: 12px; border-radius: 10px; border: 1px solid #333; font-size: 12px; }
-.cuadrito.activo { border-color: #00e676; background: #00e676; color: black; font-weight: bold; }
-.cuadrito.eliminado { opacity: 0.2; }
+/* Cuadrícula Superior */
+.player-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px; }
+.cuadrito { background: #1a1a1a; padding: 10px; border-radius: 8px; border: 1px solid #222; font-size: 11px; color: #aaa; }
+.cuadrito.activo { border-color: #00e676; background: rgba(0, 230, 118, 0.1); color: #00e676; font-weight: bold; }
+.cuadrito.eliminado { opacity: 0.15; filter: grayscale(1); }
 
 .mic-container { position: absolute; top: -70px; right: 0; }
-.btn-mute { width: 55px; height: 55px; border-radius: 50%; border: none; cursor: pointer; font-size: 22px; background: #00e676; }
+.btn-mute { width: 55px; height: 55px; border-radius: 50%; border: none; cursor: pointer; font-size: 22px; background: #00e676; display: flex; align-items: center; justify-content: center; }
 .btn-mute.muted { background: #ff5252; color: white; }
 
-@keyframes fadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
