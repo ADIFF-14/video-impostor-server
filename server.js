@@ -14,7 +14,7 @@ let palabraActual = "";
 let votosRecibidos = {};
 let rondaActual = 1;
 
-const palabras = ["Pizza", "Avión", "WhatsApp", "Netflix", "Fútbol", "Cine", "Playa", "Gato", "Reloj", "Bicicleta", "Hamburgesa", "Internet", "Gimnasio", "Chocolate", "YouTube", "Instagram", "Parque", "Dormir", "Café", "Escuela", "Teléfono", "Navidad", "Verano", "Bailar", "Música", "Fruta", "Helado", "Cerveza", "Libro", "Zapato", "Carro", "Perro", "Luna", "Sol", "Estudiar", "Trabajo", "Dinero", "Viaje", "Maleta", "Cámara", "Televisión", "Videojuego", "Sushi", "Tacos", "Guitarra", "Piscina", "Estadio", "Hospital", "Policía", "Bombero"];
+const palabras = ["Pizza", "Avión", "WhatsApp", "Netflix", "Fútbol", "Cine", "Playa", "Gato", "Reloj", "Bicicleta", "Hamburguesa", "Internet", "Instagram", "Parque", "Café", "Escuela", "Navidad", "Música", "Helado", "Libro", "Carro", "Perro", "Sol", "Trabajo", "Viaje", "Tacos", "Guitarra", "Hospital", "Cámara", "Luna", "Dinero", "Piscina", "Televisión", "Dormir", "Bailar", "Fruta", "Chocolate", "YouTube", "Teléfono", "Estudiar", "Policía", "Bombero", "Estadio", "Cerveza", "Sushi", "Zapato", "Verano", "Maleta", "Videojuego"];
 
 function mezclar(array) {
     for (let i = array.length - 1; i > 0; i--) {
@@ -45,7 +45,7 @@ io.on('connection', (socket) => {
         });
     });
 
-    socket.on('listoParaHablar', () => {
+    socket.on('empezarDebateOficial', () => {
         indiceTurno = 0;
         votosRecibidos = {};
         ordenHablar = mezclar(jugadores.filter(j => !j.eliminado));
@@ -77,7 +77,6 @@ io.on('connection', (socket) => {
         const idsVotados = Object.keys(votosRecibidos);
         let maxVotos = 0;
         let expulsadoId = null;
-
         idsVotados.forEach(id => {
             if (votosRecibidos[id] > maxVotos) {
                 maxVotos = votosRecibidos[id];
@@ -91,19 +90,19 @@ io.on('connection', (socket) => {
 
         if (expulsado.rol === "IMPOSTOR") {
             io.emit('resultadoVotacion', { 
-                mensaje: `¡TE ATRAPAMOS! ${expulsado.nombre} recibió ${maxVotos} votos y era el impostor 🔴`, 
+                mensaje: `¡TE ATRAPAMOS! ${expulsado.nombre} recibió ${maxVotos} votos y era el IMPOSTOR.`, 
                 terminar: true, palabraReal: palabraActual 
             });
         } else {
             if (rondaActual < 3) {
                 rondaActual++;
                 io.emit('resultadoVotacion', { 
-                    mensaje: `¡SE EQUIVOCARON! ${expulsado.nombre} recibió ${maxVotos} votos y era inocente. El impostor sigue suelto... `, 
+                    mensaje: `¡ERROR! ${expulsado.nombre} recibió ${maxVotos} votos pero era INOCENTE. El impostor sigue libre...`, 
                     terminar: false 
                 });
             } else {
                 io.emit('resultadoVotacion', { 
-                    mensaje: `¡EL IMPOSTOR HA GANADO! Sobrevivió las 3 rondas.`, 
+                    mensaje: `¡DERROTA! El impostor ha ganado la partida.`, 
                     terminar: true, palabraReal: palabraActual 
                 });
             }
