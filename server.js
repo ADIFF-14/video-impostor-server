@@ -1,7 +1,6 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
-
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
@@ -11,9 +10,9 @@ app.use(express.static('public'));
 let jugadores = [];
 let indiceTurno = 0;
 let palabraActual = "";
-let votos = {};
+let votosRecibidos = {};
 
-const palabras = ["Pizza", "Avión", "WhatsApp", "Minecraft", "Netflix", "Fútbol", "Cine", "Playa", "Gato", "Reloj"];
+const palabras = ["Pizza", "Avión", "WhatsApp", "Minecraft", "Netflix", "Fútbol", "Cine", "Playa"];
 
 io.on('connection', (socket) => {
     socket.on('unirse', (datos) => {
@@ -29,23 +28,17 @@ io.on('connection', (socket) => {
     });
 
     socket.on('iniciarRonda', () => {
-        console.log("Anderson ha iniciado la partida");
         if (jugadores.length < 2) return;
-        
         indiceTurno = 0;
-        votos = {};
+        votosRecibidos = {};
         palabraActual = palabras[Math.floor(Math.random() * palabras.length)];
         const impIndex = Math.floor(Math.random() * jugadores.length);
         
         jugadores.forEach((j, i) => {
             j.eliminado = false;
-            if (i === impIndex) {
-                j.rol = "IMPOSTOR";
-                io.to(j.id).emit('recibirRol', { rol: "IMPOSTOR" });
-            } else {
-                j.rol = "CIUDADANO";
-                io.to(j.id).emit('recibirRol', { rol: "CIUDADANO", palabra: palabraActual });
-            }
+            j.rol = (i === impIndex) ? "IMPOSTOR" : "CIUDADANO";
+            const info = (j.rol === "IMPOSTOR") ? { rol: "IMPOSTOR" } : { rol: "CIUDADANO", palabra: palabraActual };
+            io.to(j.id).emit('recibirRol', info);
         });
     });
 
@@ -59,22 +52,23 @@ io.on('connection', (socket) => {
     });
 
     socket.on('votarJugador', (idVotado) => {
-        votos[idVotado] = (votos[idVotado] || 0) + 1;
+        votosRecibidos[idVotado] = (votosRecibidos[idVotado] || 0) + 1;
         const vivos = jugadores.filter(j => !j.eliminado).length;
-        if (Object.values(votos).reduce((a, b) => a + b, 0) >= vivos) {
+        const totalVotos = Object.values(votosRecibidos).reduce((a, b) => a + b, 0);
+
+        if (totalVotos >= vivos) {
             procesarVotacion();
         }
     });
 
     function procesarVotacion() {
-        const expulsadoId = Object.keys(votos).reduce((a, b) => votos[a] > votos[b] ? a : b);
+        const expulsadoId = Object.keys(votosRecibidos).reduce((a, b) => votosRecibidos[a] > votosRecibidos[b] ? a : b);
         const expulsado = jugadores.find(j => j.id === expulsadoId);
-        if(!expulsado) return;
         expulsado.eliminado = true;
 
         if (expulsado.rol === "IMPOSTOR") {
             io.emit('resultadoVotacion', { 
-                mensaje: `¡TE DESCUBRIMOS, ${expulsado.nombre.toUpperCase()}! 🔴`, 
+                mensaje: `¡TE ATRAPAMOS, ${expulsado.nombre.toUpperCase()}! 🔴`, 
                 terminar: true, 
                 palabraReal: palabraActual 
             });
@@ -88,17 +82,18 @@ io.on('connection', (socket) => {
                 });
             } else {
                 io.emit('resultadoVotacion', { 
-                    mensaje: `¡FALLO TOTAL! ${expulsado.nombre} era inocente... 😈`, 
+                    mensaje: `¡NOS EQUIVOCAMOS! ${expulsado.nombre} era inocente. El impostor sigue suelto... 😈`, 
                     terminar: false 
                 });
                 setTimeout(() => { indiceTurno = 0; notificarTurno(); }, 4000);
             }
         }
-        votos = {};
+        votosRecibidos = {};
     }
 
     function notificarTurno() {
         while (indiceTurno < jugadores.length && jugadores[indiceTurno].eliminado) { indiceTurno++; }
+        
         if (indiceTurno < jugadores.length) {
             io.emit('cambioDeTurno', { 
                 nombre: jugadores[indiceTurno].nombre, 
@@ -116,5 +111,4 @@ io.on('connection', (socket) => {
     });
 });
 
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Servidor en puerto ${PORT}`));
+server.listen(process.env.PORT || 3000, () => console.log("Servidor Online"));
