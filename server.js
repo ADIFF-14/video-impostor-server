@@ -58,9 +58,15 @@ io.on('connection', (socket) => {
     });
 
     function notificarTurno() {
+        // Si aún hay gente en la lista para hablar
         if (indiceTurno < ordenHablar.length) {
-            io.emit('cambioDeTurno', { nombre: ordenHablar[indiceTurno].nombre, idSocket: ordenHablar[indiceTurno].id, lista: jugadores });
+            io.emit('cambioDeTurno', { 
+                nombre: ordenHablar[indiceTurno].nombre, 
+                idSocket: ordenHablar[indiceTurno].id, 
+                lista: jugadores 
+            });
         } else {
+            // ¡IMPORTANTE! Aquí es donde forzamos la votación cuando ya no quedan turnos
             io.emit('faseVotacion', jugadores.filter(j => !j.eliminado));
         }
     }
