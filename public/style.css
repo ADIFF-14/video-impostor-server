@@ -1,54 +1,66 @@
-* {
-  box-sizing: border-box;
-  font-family: Arial, sans-serif;
-}
-
+/* Configuración General */
 body {
   margin: 0;
-  background: #111;
-  color: #fff;
-}
-
-#app {
-  max-width: 420px;
-  margin: auto;
-  padding: 20px;
+  padding: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #1a1a1a; /* Fondo oscuro */
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
   text-align: center;
 }
 
+#app {
+  width: 90%;
+  max-width: 400px;
+}
+
+/* OCULTAR PANTALLAS: Esta es la clave */
 .screen {
-  display: none;
+  display: none; /* Por defecto, todas ocultas */
+  background: #2a2a2a;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
 }
 
+/* MOSTRAR SOLO LA ACTIVA */
 .screen.active {
-  display: block;
+  display: block; /* Solo se ve la que tiene la clase 'active' */
+  animation: fadeIn 0.5s ease-in-out;
 }
 
-h1, h2 {
-  margin-bottom: 10px;
-}
-
-p {
-  margin-bottom: 15px;
-}
-
-.note {
-  font-size: 0.9em;
-  color: #ccc;
-}
-
+/* Botones estilo juego */
 button {
-  width: 100%;
-  padding: 15px;
-  margin-top: 10px;
-  font-size: 16px;
+  background-color: #00e676;
+  color: black;
   border: none;
+  padding: 12px 25px;
+  font-size: 18px;
+  font-weight: bold;
   border-radius: 8px;
   cursor: pointer;
-  background: #00c853;
-  color: #000;
+  margin-top: 20px;
+  width: 100%;
+  transition: transform 0.2s;
 }
 
 button:hover {
-  background: #00e676;
+  transform: scale(1.05);
+}
+
+/* Animación de entrada */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Estilo especial para el que habla */
+#activeSpeakerContainer {
+  background: #333;
+  border: 3px solid #ffeb3b;
+  padding: 20px;
+  border-radius: 12px;
 }
