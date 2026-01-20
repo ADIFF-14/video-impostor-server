@@ -11,32 +11,33 @@
 <div id="app">
     <section id="welcome" class="screen active">
         <h1>👋 VideoImpostor</h1>
-        <input type="text" id="userName" placeholder="Escribe tu nombre...">
+        <input type="text" id="userName" placeholder="Nombre...">
         <button onclick="entrarJuego()">Entrar</button>
     </section>
 
     <section id="waiting" class="screen">
-        <h2>Sala de Espera</h2>
+        <h2>Esperando inicio...</h2>
         <p>Jugadores: <b id="count">0</b></p>
-        <button id="adminBtn" style="display:none" onclick="newRound()">🚀 INICIAR PARTIDA</button>
+        <button id="adminBtn" style="display:none" onclick="newRound()">🚀 INICIAR</button>
     </section>
 
     <section id="role" class="screen">
         <h1 id="roleTitle"></h1>
-        <div class="frase-box"><p id="roleText"></p></div>
+        <h2 id="roleText"></h2>
         <button onclick="irALosTurnos()">ENTENDIDO</button>
     </section>
 
     <section id="turnScreen" class="screen">
         <div id="grid-jugadores" class="player-grid"></div>
         <div id="activeSpeakerContainer">
+            <p>Hablando ahora:</p>
             <h1 id="currentSpeakerName">---</h1>
         </div>
-        <button id="btnFinalizarTurno" onclick="finalizarMiTurno()">TERMINÉ DE HABLAR</button>
+        <button id="btnFinalizarTurno" onclick="finalizarMiTurno()">TERMINAR DE HABLAR</button>
     </section>
 
     <section id="end" class="screen">
-        <h2 id="voteStatus">¿QUIÉN ES EL IMPOSTOR?</h2>
+        <h2 id="voteStatus"></h2>
         <div id="lista-votacion" class="player-grid"></div>
         <div id="resultado-final" style="display:none">
             <h1 id="texto-expulsado"></h1><h2 id="texto-revelacion"></h2>
