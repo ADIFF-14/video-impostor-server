@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8"><title>VideoImpostor</title>
+    <meta charset="UTF-8"><title>IMPOSTOR</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
@@ -10,30 +10,43 @@
 <body>
 <div id="app">
     <div class="mic-container"><button id="micBtn" class="btn-mute" onclick="toggleMic()">🎤</button></div>
+
     <section id="welcome" class="screen active">
-        <h1>🕵️ VideoImpostor</h1>
-        <input type="text" id="userName" placeholder="Nombre...">
-        <button onclick="entrarJuego()">Entrar</button>
+        <h1 class="main-title">IMPOSTOR</h1>
+        <p class="welcome-msg">¡Hola! Soy Anderson y te doy la bienvenida.</p>
+        <p style="margin-bottom:30px; font-style:italic; opacity:0.8;">Hay un impostor suelto entre nosotros... ¿Serás capaz de descubrirlo?</p>
+        <input type="text" id="userName" class="big-input" placeholder="Tu Nombre">
+        <button class="btn-big" onclick="entrarJuego()">ENTRAR</button>
     </section>
+
     <section id="waiting" class="screen">
         <h2>Sala de Espera</h2>
-        <p>Jugadores: <span id="count">0</span></p>
-        <button id="adminBtn" style="display:none" onclick="socket.emit('iniciarRonda')">🚀 INICIAR</button>
+        <p>Jugadores en sala: <span id="count">0</span></p>
+        <button id="adminBtn" style="display:none" class="btn-big" onclick="socket.emit('iniciarRonda')">🚀 INICIAR PARTIDA</button>
     </section>
+
     <section id="role" class="screen">
-        <h1 id="roleTitle"></h1>
-        <h2 id="roleText" style="color:#00e676; font-size:35px;"></h2>
-        <button onclick="irALosTurnos()">ENTENDIDO</button>
+        <h2 id="roleTitle"></h2>
+        <h1 id="roleText" style="color:#00e676; font-size:45px; margin:30px 0;"></h1>
+        <p>Espera a que Anderson inicie el debate...</p>
+        <button id="startDebateBtn" style="display:none; background:#ffeb3b;" class="btn-big" onclick="socket.emit('empezarDebateOficial')">INICIAR DEBATE</button>
     </section>
+
     <section id="turnScreen" class="screen">
         <div id="grid-jugadores" class="player-grid"></div>
-        <h1 id="currentSpeakerName">---</h1>
-        <button id="btnFinalizarTurno" onclick="socket.emit('finalizarMiTurno')">TERMINAR</button>
+        <div style="background:#222; padding:30px; border-radius:20px; border:2px solid #ffeb3b;">
+            <p style="opacity:0.6; margin:0;">Hablando:</p>
+            <h1 id="currentSpeakerName" style="font-size:35px; margin:10px 0;">---</h1>
+        </div>
+        <button id="btnFinalizarTurno" class="btn-big" style="margin-top:20px;" onclick="socket.emit('finalizarMiTurno')">TERMINAR DE HABLAR</button>
     </section>
+
     <section id="end" class="screen"><h2>VOTACIÓN</h2><div id="lista-votacion"></div></section>
+
     <section id="result" class="screen">
-        <h1 id="texto-res"></h1><h2 id="texto-palabra"></h2>
-        <button id="btnNext" style="display:none" onclick="socket.emit('iniciarRonda')">🔄 NUEVA PARTIDA</button>
+        <h1 id="texto-res" style="font-size:24px; color:#ffeb3b;"></h1>
+        <h2 id="texto-palabra" style="margin:20px 0;"></h2>
+        <button id="btnNext" style="display:none" class="btn-big" onclick="socket.emit('iniciarRonda')">🔄 NUEVA PARTIDA</button>
     </section>
 </div>
 <script src="script.js"></script>
