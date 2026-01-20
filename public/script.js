@@ -6,20 +6,15 @@ navigator.mediaDevices.getUserMedia({ audio: true }).then(s => {
     miStream = s;
     peer.on('call', call => {
         call.answer(miStream);
-        call.on('stream', rem => playStream(rem));
+        call.on('stream', rem => { const a = document.createElement('audio'); a.srcObject = rem; a.play(); });
     });
 });
-
-function playStream(stream) {
-    const a = document.createElement('audio');
-    a.srcObject = stream; a.play();
-}
 
 socket.on('listaParaAudio', (jugadores) => {
     jugadores.forEach(u => {
         if (u.peerId !== peer.id && miStream) {
             const call = peer.call(u.peerId, miStream);
-            call.on('stream', rem => playStream(rem));
+            call.on('stream', rem => { const a = document.createElement('audio'); a.srcObject = rem; a.play(); });
         }
     });
 });
@@ -52,6 +47,11 @@ socket.on('recibirRol', (data) => {
     if (esAdmin) document.getElementById("startDebateBtn").style.display = "block";
 });
 
+function irALosTurnos() {
+    if(esAdmin) socket.emit('empezarDebateOficial');
+    showScreen("turnScreen");
+}
+
 socket.on('cambioDeTurno', (data) => {
     showScreen("turnScreen");
     const grid = document.getElementById("grid-jugadores");
@@ -63,6 +63,7 @@ socket.on('cambioDeTurno', (data) => {
         grid.appendChild(div);
     });
     document.getElementById("currentSpeakerName").innerText = data.nombre;
+    // El botón solo le sale al que le toca hablar
     document.getElementById("btnFinalizarTurno").style.display = (socket.id === data.idSocket) ? "block" : "none";
 });
 
@@ -77,7 +78,7 @@ socket.on('faseVotacion', (vivos) => {
             b.innerText = j.nombre;
             b.onclick = () => { 
                 socket.emit('votarJugador', j.id); 
-                lista.innerHTML = "<p style='opacity:0.5; margin-top:20px;'>Voto enviado. Esperando...</p>"; 
+                lista.innerHTML = "<p style='margin-top:20px; opacity:0.5;'>Voto enviado. Esperando a los demás...</p>"; 
             };
             lista.appendChild(b);
         }
@@ -101,7 +102,11 @@ function showScreen(id) {
     document.getElementById(id).classList.add("active");
 }
 
-socket.on('actualizarLista', (n) => { if(document.getElementById("count")) document.getElementById("count").innerText = n; });
+socket.on('actualizarLista', (n) => { 
+    const el = document.getElementById("count");
+    if(el) el.innerText = n; 
+});
+
 
 
 
