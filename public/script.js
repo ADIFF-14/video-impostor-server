@@ -49,7 +49,6 @@ socket.on('recibirRol', (data) => {
     document.getElementById("roleTitle").innerText = (data.rol === "IMPOSTOR") ? "ERES EL IMPOSTOR" : "TU FRASE ES:";
     document.getElementById("roleText").innerText = (data.rol === "IMPOSTOR") ? "Miente para sobrevivir" : data.palabra;
     showScreen("role");
-    // Anderson tiene el botón para iniciar debate cuando todos terminen de leer
     if (esAdmin) document.getElementById("startDebateBtn").style.display = "block";
 });
 
@@ -74,9 +73,12 @@ socket.on('faseVotacion', (vivos) => {
     vivos.forEach(j => {
         if(j.id !== socket.id) {
             const b = document.createElement("button");
-            b.style.marginBottom = "10px";
-            b.innerText = `Votar a ${j.nombre}`;
-            b.onclick = () => { socket.emit('votarJugador', j.id); lista.innerHTML = "Voto enviado..."; };
+            b.className = "btn-voto";
+            b.innerText = j.nombre;
+            b.onclick = () => { 
+                socket.emit('votarJugador', j.id); 
+                lista.innerHTML = "<p style='opacity:0.5; margin-top:20px;'>Voto enviado. Esperando...</p>"; 
+            };
             lista.appendChild(b);
         }
     });
@@ -85,12 +87,11 @@ socket.on('faseVotacion', (vivos) => {
 socket.on('resultadoVotacion', (res) => {
     showScreen("result");
     document.getElementById("texto-res").innerText = res.mensaje;
-    document.getElementById("texto-palabra").innerText = res.terminar ? "La frase era: " + res.palabraReal : "";
-    
-    // Si la partida terminó, Anderson puede reiniciar. Si no, esperamos 8 seg.
     if (res.terminar) {
+        document.getElementById("texto-palabra").innerText = "La frase era: " + res.palabraReal;
         if (esAdmin) document.getElementById("btnNext").style.display = "block";
     } else {
+        document.getElementById("texto-palabra").innerText = "Siguiente ronda en camino...";
         setTimeout(() => { if(esAdmin) socket.emit('empezarDebateOficial'); }, 8000);
     }
 });
@@ -100,6 +101,7 @@ function showScreen(id) {
     document.getElementById(id).classList.add("active");
 }
 
-socket.on('actualizarLista', (n) => { document.getElementById("count").innerText = n; });
+socket.on('actualizarLista', (n) => { if(document.getElementById("count")) document.getElementById("count").innerText = n; });
+
 
 
