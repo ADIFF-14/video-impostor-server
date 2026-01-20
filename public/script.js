@@ -1,8 +1,8 @@
-// 1. Conexión con Google Meet (Mantenemos tu lógica)
+// 1. Conexión con Google Meet
 async function initMeet() {
     try {
-        const session = await window.meet.addon.createAddonSession();
-        console.log("Sesión de Google Meet iniciada");
+        await window.meet.addon.createAddonSession();
+        console.log("Sesión de Meet lista");
     } catch (e) {
         console.log("Fuera de Meet");
     }
@@ -11,17 +11,17 @@ initMeet();
 
 // 2. Variables de Estado
 const socket = io(); 
-const peer = new Peer(); // Para el audio
+const peer = new Peer(); 
 let miStream;
 let palabraActual = "";
 let esAdmin = false;
 let miNombre = "";
+let miRolActual = "";
+let listaJugadoresGlobal = [];
 
 // 3. Audio con PeerJS
-// Pedimos micrófono al cargar la página
 navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
     miStream = stream;
-    // Escuchar cuando otros nos llaman para darnos su audio
     peer.on('call', call => {
         call.answer(miStream);
         call.on('stream', remoteStream => {
@@ -40,35 +40,24 @@ function showScreen(id) {
 }
 
 function entrarJuego() {
-    const nombreInput = document.getElementById("userName") ? document.getElementById("userName").value : "";
-    miNombre = nombreInput || prompt("Tu nombre:") || "Jugador";
+    const input = document.getElementById("userName");
+    miNombre = (input ? input.value : "") || prompt("Tu nombre:") || "Jugador";
     
-    if(miNombre.toLowerCase() === "anderson") {
-        esAdmin = true;
-    }
+    if(miNombre.toLowerCase() === "anderson") esAdmin = true;
     
-    // Esperamos a que PeerJS nos dé un ID de audio antes de unirnos al socket
-    if (peer.id) {
-        enviarUnion();
-    } else {
-        peer.on('open', () => enviarUnion());
-    }
+    if (peer.id) enviarUnion();
+    else peer.on('open', () => enviarUnion());
 }
 
 function enviarUnion() {
     socket.emit('unirse', { nombre: miNombre, peerId: peer.id });
     showScreen("waiting");
-    
-    if(esAdmin) {
-        const btn1 = document.getElementById("adminBtn");
-        const btn2 = document.getElementById("adminNextBtn");
-        if(btn1) btn1.style.display = "block";
-        if(btn2) btn2.style.display = "block";
-    }
+    if(esAdmin) document.getElementById("adminBtn").style.display = "block";
 }
 
-// 5. Lógica de Audio: Conectar con los demás
+// 5. Lógica de Audio y Lista
 socket.on('listaParaAudio', (jugadores) => {
+    listaJugadoresGlobal = jugadores; // Guardamos la lista actualizada
     jugadores.forEach(user => {
         if (user.peerId !== peer.id) {
             const call = peer.call(user.peerId, miStream);
@@ -85,40 +74,47 @@ socket.on('listaParaAudio', (jugadores) => {
 socket.on('recibirRol', (data) => {
     const title = document.getElementById("roleTitle");
     const text = document.getElementById("roleText");
-    document.getElementById("revealText").innerText = "";
+    miRolActual = data.rol;
 
     if (data.rol === "IMPOSTOR") {
         title.innerText = "🔴 ERES EL IMPOSTOR";
-        text.innerHTML = "¡Miente! No conoces la palabra.<br>Escucha a los demás para adivinarla.";
-        palabraActual = "ERAS EL IMPOSTOR";
+        text.innerHTML = "¡Miente! No conoces la palabra.<br>Escucha pistas para adivinar.";
     } else {
-        palabraActual = data.palabra;
         title.innerText = "🟢 Eres Ciudadano";
-        text.innerHTML = `La palabra secreta es:<br><b style="font-size:30px; color:#00e676;">${data.palabra}</b>`;
+        text.innerHTML = `La palabra secreta es:<br><b style="font-size:35px; color:#00e676;">${data.palabra}</b>`;
+        palabraActual = data.palabra;
     }
     showScreen("role");
 });
 
-// 7. GESTIÓN DE TURNOS (Lo nuevo)
 function irALosTurnos() {
-    // Esta función se llama desde el botón "Listo, ya lo vi"
     showScreen("turnScreen");
 }
 
+// 7. GESTIÓN DE TURNOS Y ESCENARIO
 socket.on('cambioDeTurno', (data) => {
     showScreen("turnScreen");
+    const grid = document.getElementById("grid-jugadores");
     const nameDisplay = document.getElementById("currentSpeakerName");
     const finishBtn = document.getElementById("btnFinalizarTurno");
 
-    if(nameDisplay) nameDisplay.innerText = data.nombre;
+    // Dibujar cuadritos arriba
+    grid.innerHTML = "";
+    data.lista.forEach(j => {
+        const div = document.createElement("div");
+        div.className = `cuadrito-jugador ${j.id === data.idSocket ? 'activo' : ''} ${j.eliminado ? 'muerto' : ''}`;
+        div.innerText = j.nombre;
+        grid.appendChild(div);
+    });
 
-    // Solo al que le toca le sale el botón de finalizar
+    nameDisplay.innerText = data.nombre;
+    
     if (socket.id === data.idSocket) {
-        if(nameDisplay) nameDisplay.style.color = "#00e676";
-        if(finishBtn) finishBtn.style.display = "block";
+        nameDisplay.style.color = "#00e676";
+        finishBtn.style.display = "block";
     } else {
-        if(nameDisplay) nameDisplay.style.color = "#ffeb3b";
-        if(finishBtn) finishBtn.style.display = "none";
+        nameDisplay.style.color = "#ffeb3b";
+        finishBtn.style.display = "none";
     }
 });
 
@@ -126,13 +122,54 @@ function finalizarMiTurno() {
     socket.emit('finalizarMiTurno');
 }
 
-socket.on('faseVotacion', () => {
+// 8. VOTACIÓN Y RESULTADOS
+socket.on('faseVotacion', (vivos) => {
     showScreen("end");
+    document.getElementById("voteStatus").style.display = "block";
+    document.getElementById("resultado-final").style.display = "none";
+    
+    const listaVotacion = document.getElementById("lista-votacion");
+    listaVotacion.innerHTML = "";
+
+    vivos.forEach(j => {
+        if(j.id !== socket.id) {
+            const btn = document.createElement("button");
+            btn.innerText = j.nombre;
+            btn.className = "btn-voto";
+            btn.onclick = () => {
+                socket.emit('votarJugador', j.id);
+                listaVotacion.innerHTML = "<h3>Voto enviado...</h3>";
+            };
+            listaVotacion.appendChild(btn);
+        }
+    });
 });
 
-// 8. Controles de Partida
+socket.on('resultadoVotacion', (res) => {
+    showScreen("end");
+    document.getElementById("voteStatus").style.display = "none";
+    document.getElementById("lista-votacion").innerHTML = "";
+    
+    const resDiv = document.getElementById("resultado-final");
+    const txtExp = document.getElementById("texto-expulsado");
+    const txtRev = document.getElementById("texto-revelacion");
+
+    resDiv.style.display = "block";
+    txtExp.innerText = res.mensaje;
+    txtExp.style.color = res.terminar ? "#ff5252" : "#ffeb3b";
+
+    if (res.terminar) {
+        txtRev.innerText = "La frase era: " + res.palabra;
+        if (esAdmin) document.getElementById("adminNextBtn").style.display = "block";
+    } else {
+        txtRev.innerText = "Nueva ronda en breve...";
+        document.getElementById("adminNextBtn").style.display = "none";
+    }
+});
+
+// 9. Controles de Partida
 function reveal() {
-    document.getElementById("revealText").innerText = "La palabra era: " + palabraActual;
+    socket.emit('solicitarRevelar');
 }
 
 function newRound() {
