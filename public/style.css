@@ -1,20 +1,19 @@
 body { margin: 0; background: #0a0a0a; color: white; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-#app { width: 95%; max-width: 400px; text-align: center; }
-.screen { display: none; background: #161616; padding: 20px; border-radius: 20px; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-.screen.active { display: block; animation: fadeIn 0.4s; }
+#app { width: 95%; max-width: 420px; text-align: center; position: relative; }
+.screen { display: none; background: #161616; padding: 25px; border-radius: 25px; border: 1px solid #333; box-shadow: 0 15px 35px rgba(0,0,0,0.7); }
+.screen.active { display: block; animation: fadeIn 0.3s; }
 
-.ronda-tag { background: #ffeb3b; color: black; padding: 5px 15px; border-radius: 20px; font-weight: bold; display: inline-block; margin-bottom: 10px; font-size: 14px; }
-
-.player-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 15px 0; }
-.cuadrito { background: #222; padding: 10px; border-radius: 8px; border: 1px solid #444; font-size: 11px; transition: 0.3s; }
-.cuadrito.activo { background: #00e676; color: black; transform: scale(1.1); font-weight: bold; box-shadow: 0 0 10px #00e676; }
+.player-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0; }
+.cuadrito { background: #222; padding: 12px; border-radius: 12px; border: 2px solid #444; font-size: 12px; }
+.cuadrito.activo { background: #00e676; color: #000; border-color: #fff; transform: scale(1.05); font-weight: bold; }
 .cuadrito.eliminado { opacity: 0.2; border-color: #ff5252; filter: grayscale(1); }
 
-.btn-mute { background: #444; color: white; border-radius: 50%; width: 50px; height: 50px; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid #555; font-size: 20px; }
-.btn-mute.muted { background: #ff5252; border-color: white; }
+/* Micrófono flotante */
+.mic-container { position: absolute; top: -60px; right: 10px; z-index: 100; }
+.btn-mute { width: 50px; height: 50px; border-radius: 50%; border: none; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; transition: 0.3s; background: #00e676; }
+.btn-mute.muted { background: #ff5252; color: white; }
 
-button { background: #00e676; color: black; border: none; padding: 15px; font-weight: bold; border-radius: 10px; width: 100%; margin-top: 10px; cursor: pointer; font-size: 16px; }
-button:hover { background: #00ff84; }
-.btn-voto { background: #333; color: white; border: 1px solid #555; font-size: 13px; margin: 4px; }
+button { background: #00e676; color: black; border: none; padding: 15px; font-weight: bold; border-radius: 12px; width: 100%; margin-top: 12px; cursor: pointer; font-size: 16px; }
+.btn-voto { background: #333; color: white; border: 1px solid #555; margin-bottom: 8px; }
 
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
