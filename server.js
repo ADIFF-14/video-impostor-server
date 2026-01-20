@@ -90,14 +90,14 @@ io.on('connection', (socket) => {
 
         if (expulsado.rol === "IMPOSTOR") {
             io.emit('resultadoVotacion', { 
-                mensaje: `¡TE ATRAPAMOS! ${expulsado.nombre} recibió ${maxVotos} votos y era el IMPOSTOR.`, 
+                mensaje: `¡ATRAPADO! ${expulsado.nombre} recibió ${maxVotos} votos y era el IMPOSTOR.`, 
                 terminar: true, palabraReal: palabraActual 
             });
         } else {
             if (rondaActual < 3) {
                 rondaActual++;
                 io.emit('resultadoVotacion', { 
-                    mensaje: `¡ERROR! ${expulsado.nombre} recibió ${maxVotos} votos pero era INOCENTE. El impostor sigue libre...`, 
+                    mensaje: `¡ERROR! ${expulsado.nombre} recibió ${maxVotos} votos pero era INOCENTE.`, 
                     terminar: false 
                 });
             } else {
