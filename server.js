@@ -13,7 +13,7 @@ let indiceTurno = 0;
 let palabraActual = "";
 let votos = {};
 
-const palabras = ["Pizza", "Avión", "WhatsApp", "Minecraft", "Netflix", "Fútbol", "Cine", "Playa"];
+const palabras = ["Pizza", "Avión", "WhatsApp", "Minecraft", "Netflix", "Fútbol", "Cine", "Playa", "Gimnasio", "Hamburguesa"];
 
 io.on('connection', (socket) => {
     socket.on('unirse', (datos) => {
@@ -37,10 +37,18 @@ io.on('connection', (socket) => {
         
         jugadores.forEach((j, i) => {
             j.eliminado = false;
-            j.rol = (i === impIndex) ? "IMPOSTOR" : "CIUDADANO";
-            const info = (j.rol === "IMPOSTOR") ? { rol: "IMPOSTOR" } : { rol: "CIUDADANO", palabra: palabraActual };
-            io.to(j.id).emit('recibirRol', info);
+            if (i === impIndex) {
+                j.rol = "IMPOSTOR";
+                io.to(j.id).emit('recibirRol', { rol: "IMPOSTOR" });
+            } else {
+                j.rol = "CIUDADANO";
+                io.to(j.id).emit('recibirRol', { rol: "CIUDADANO", palabra: palabraActual });
+            }
         });
+        // Esperamos a que los jugadores vean su rol antes de iniciar turnos
+    });
+
+    socket.on('listoParaHablar', () => {
         notificarTurno();
     });
 
@@ -78,7 +86,7 @@ io.on('connection', (socket) => {
                 });
             } else {
                 io.emit('resultadoVotacion', { 
-                    mensaje: `¡FALLO TOTAL! ${expulsado.nombre} era inocente. El impostor sigue suelto... 😈`, 
+                    mensaje: `¡FALLO TOTAL! ${expulsado.nombre} era inocente. El impostor sigue entre nosotros... 😈`, 
                     terminar: false 
                 });
                 setTimeout(() => { indiceTurno = 0; notificarTurno(); }, 4000);
@@ -106,4 +114,4 @@ io.on('connection', (socket) => {
     });
 });
 
-server.listen(process.env.PORT || 3000, () => console.log("Servidor iniciado"));
+server.listen(process.env.PORT || 3000, () => console.log("Servidor Online"));
