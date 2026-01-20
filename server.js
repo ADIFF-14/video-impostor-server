@@ -46,7 +46,6 @@ io.on('connection', (socket) => {
     });
 
     socket.on('listoParaHablar', () => {
-        // Solo iniciamos turnos cuando Anderson o el admin lo decida tras ver que todos están listos
         indiceTurno = 0;
         votosRecibidos = {};
         ordenHablar = mezclar(jugadores.filter(j => !j.eliminado));
@@ -60,11 +59,7 @@ io.on('connection', (socket) => {
 
     function notificarTurno() {
         if (indiceTurno < ordenHablar.length) {
-            io.emit('cambioDeTurno', { 
-                nombre: ordenHablar[indiceTurno].nombre, 
-                idSocket: ordenHablar[indiceTurno].id, 
-                lista: jugadores 
-            });
+            io.emit('cambioDeTurno', { nombre: ordenHablar[indiceTurno].nombre, idSocket: ordenHablar[indiceTurno].id, lista: jugadores });
         } else {
             io.emit('faseVotacion', jugadores.filter(j => !j.eliminado));
         }
@@ -79,19 +74,38 @@ io.on('connection', (socket) => {
     });
 
     function procesarVotacion() {
-        const expulsadoId = Object.keys(votosRecibidos).reduce((a, b) => votosRecibidos[a] > votosRecibidos[b] ? a : b);
+        const idsVotados = Object.keys(votosRecibidos);
+        let maxVotos = 0;
+        let expulsadoId = null;
+
+        idsVotados.forEach(id => {
+            if (votosRecibidos[id] > maxVotos) {
+                maxVotos = votosRecibidos[id];
+                expulsadoId = id;
+            }
+        });
+
         const expulsado = jugadores.find(j => j.id === expulsadoId);
         if(!expulsado) return;
         expulsado.eliminado = true;
 
         if (expulsado.rol === "IMPOSTOR") {
-            io.emit('resultadoVotacion', { mensaje: `¡TE ATRAPAMOS! ${expulsado.nombre} era el impostor 🔴`, terminar: true, palabraReal: palabraActual });
+            io.emit('resultadoVotacion', { 
+                mensaje: `¡TE ATRAPAMOS! ${expulsado.nombre} recibió ${maxVotos} votos y era el impostor 🔴`, 
+                terminar: true, palabraReal: palabraActual 
+            });
         } else {
             if (rondaActual < 3) {
                 rondaActual++;
-                io.emit('resultadoVotacion', { mensaje: `¡SE EQUIVOCARON! ${expulsado.nombre} era inocente. El impostor sigue suelto... 😈`, terminar: false });
+                io.emit('resultadoVotacion', { 
+                    mensaje: `¡SE EQUIVOCARON! ${expulsado.nombre} recibió ${maxVotos} votos y era inocente. El impostor sigue suelto... 😈`, 
+                    terminar: false 
+                });
             } else {
-                io.emit('resultadoVotacion', { mensaje: "¡EL IMPOSTOR HA GANADO! 💀", terminar: true, palabraReal: palabraActual });
+                io.emit('resultadoVotacion', { 
+                    mensaje: `¡EL IMPOSTOR HA GANADO! Sobrevivió las 3 rondas. 💀`, 
+                    terminar: true, palabraReal: palabraActual 
+                });
             }
         }
         votosRecibidos = {};
