@@ -1,65 +1,67 @@
-// 1. Conexión con Google Meet
-async function initMeet() {
-    try {
-        await window.meet.addon.createAddonSession();
-        console.log("Sesión de Meet lista");
-    } catch (e) {
-        console.log("Fuera de Meet");
-    }
-}
-initMeet();
-
-// 2. Variables de Estado
-const socket = io(); 
+ // 1. Variables Globales
+const socket = io();
 const peer = new Peer(); 
 let miStream;
-let palabraActual = "";
-let esAdmin = false;
 let miNombre = "";
+let esAdmin = false;
 let miRolActual = "";
 let listaJugadoresGlobal = [];
 
-// 3. Audio con PeerJS
-navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-    miStream = stream;
-    peer.on('call', call => {
-        call.answer(miStream);
-        call.on('stream', remoteStream => {
-            const audio = document.createElement('audio');
-            audio.srcObject = remoteStream;
-            audio.play();
+// 2. Intentar activar micrófono desde el inicio
+async function activarMicrofono() {
+    try {
+        miStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        console.log("Micrófono listo");
+    } catch (err) {
+        console.error("Error al acceder al micrófono:", err);
+        alert("Para jugar necesitas permitir el uso del micrófono.");
+    }
+}
+activarMicrofono();
+
+// 3. Función Principal del Botón
+async function entrarJuego() {
+    const inputNombre = document.getElementById("userName");
+    miNombre = (inputNombre ? inputNombre.value : "") || "Jugador_" + Math.floor(Math.random()*100);
+
+    if (miNombre.toLowerCase() === "anderson") esAdmin = true;
+
+    // Si el micro no se activó antes, lo intentamos otra vez
+    if (!miStream) {
+        await activarMicrofono();
+    }
+
+    // Unirse al servidor solo si PeerJS ya nos dio un ID
+    if (peer.id) {
+        enviarAlServidor();
+    } else {
+        console.log("Esperando ID de PeerJS...");
+        peer.on('open', (id) => {
+            enviarAlServidor();
         });
+    }
+}
+
+function enviarAlServidor() {
+    socket.emit('unirse', { nombre: miNombre, peerId: peer.id });
+    showScreen("waiting");
+    if (esAdmin) document.getElementById("adminBtn").style.display = "block";
+}
+
+// 4. Lógica de Audio (PeerJS)
+peer.on('call', call => {
+    call.answer(miStream);
+    call.on('stream', remoteStream => {
+        const audio = document.createElement('audio');
+        audio.srcObject = remoteStream;
+        audio.play();
     });
 });
 
-// 4. Funciones de Interfaz
-function showScreen(id) {
-    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-    const target = document.getElementById(id);
-    if(target) target.classList.add("active");
-}
-
-function entrarJuego() {
-    const input = document.getElementById("userName");
-    miNombre = (input ? input.value : "") || prompt("Tu nombre:") || "Jugador";
-    
-    if(miNombre.toLowerCase() === "anderson") esAdmin = true;
-    
-    if (peer.id) enviarUnion();
-    else peer.on('open', () => enviarUnion());
-}
-
-function enviarUnion() {
-    socket.emit('unirse', { nombre: miNombre, peerId: peer.id });
-    showScreen("waiting");
-    if(esAdmin) document.getElementById("adminBtn").style.display = "block";
-}
-
-// 5. Lógica de Audio y Lista
 socket.on('listaParaAudio', (jugadores) => {
-    listaJugadoresGlobal = jugadores; // Guardamos la lista actualizada
+    listaJugadoresGlobal = jugadores;
     jugadores.forEach(user => {
-        if (user.peerId !== peer.id) {
+        if (user.peerId !== peer.id && miStream) {
             const call = peer.call(user.peerId, miStream);
             call.on('stream', remoteStream => {
                 const audio = document.createElement('audio');
@@ -70,37 +72,30 @@ socket.on('listaParaAudio', (jugadores) => {
     });
 });
 
-// 6. Recibir Roles
-socket.on('recibirRol', (data) => {
-    const title = document.getElementById("roleTitle");
-    const text = document.getElementById("roleText");
-    miRolActual = data.rol;
+// 5. Gestión de Pantallas y Turnos
+function showScreen(id) {
+    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+    const target = document.getElementById(id);
+    if (target) target.classList.add("active");
+}
 
-    if (data.rol === "IMPOSTOR") {
-        title.innerText = "🔴 ERES EL IMPOSTOR";
-        text.innerHTML = "¡Miente! No conoces la palabra.<br>Escucha pistas para adivinar.";
-    } else {
-        title.innerText = "🟢 Eres Ciudadano";
-        text.innerHTML = `La palabra secreta es:<br><b style="font-size:35px; color:#00e676;">${data.palabra}</b>`;
-        palabraActual = data.palabra;
-    }
+socket.on('recibirRol', (data) => {
+    miRolActual = data.rol;
+    document.getElementById("roleTitle").innerText = (data.rol === "IMPOSTOR") ? "🔴 ERES EL IMPOSTOR" : "🟢 Eres Ciudadano";
+    document.getElementById("roleText").innerHTML = (data.rol === "IMPOSTOR") ? "¡Miente para ganar!" : `Palabra: <br><b>${data.palabra}</b>`;
     showScreen("role");
 });
 
-function irALosTurnos() {
-    showScreen("turnScreen");
-}
+function irALosTurnos() { showScreen("turnScreen"); }
 
-// 7. GESTIÓN DE TURNOS Y ESCENARIO
 socket.on('cambioDeTurno', (data) => {
     showScreen("turnScreen");
     const grid = document.getElementById("grid-jugadores");
     const nameDisplay = document.getElementById("currentSpeakerName");
     const finishBtn = document.getElementById("btnFinalizarTurno");
 
-    // Dibujar cuadritos arriba
     grid.innerHTML = "";
-    data.lista.forEach(j => {
+    data.listaActualizada.forEach(j => {
         const div = document.createElement("div");
         div.className = `cuadrito-jugador ${j.id === data.idSocket ? 'activo' : ''} ${j.eliminado ? 'muerto' : ''}`;
         div.innerText = j.nombre;
@@ -108,26 +103,15 @@ socket.on('cambioDeTurno', (data) => {
     });
 
     nameDisplay.innerText = data.nombre;
-    
-    if (socket.id === data.idSocket) {
-        nameDisplay.style.color = "#00e676";
-        finishBtn.style.display = "block";
-    } else {
-        nameDisplay.style.color = "#ffeb3b";
-        finishBtn.style.display = "none";
-    }
+    nameDisplay.style.color = (socket.id === data.idSocket) ? "#00e676" : "#ffeb3b";
+    finishBtn.style.display = (socket.id === data.idSocket) ? "block" : "none";
 });
 
-function finalizarMiTurno() {
-    socket.emit('finalizarMiTurno');
-}
-
-// 8. VOTACIÓN Y RESULTADOS
+// 6. Votaciones y Resultados
 socket.on('faseVotacion', (vivos) => {
     showScreen("end");
     document.getElementById("voteStatus").style.display = "block";
     document.getElementById("resultado-final").style.display = "none";
-    
     const listaVotacion = document.getElementById("lista-votacion");
     listaVotacion.innerHTML = "";
 
@@ -148,35 +132,19 @@ socket.on('faseVotacion', (vivos) => {
 socket.on('resultadoVotacion', (res) => {
     showScreen("end");
     document.getElementById("voteStatus").style.display = "none";
-    document.getElementById("lista-votacion").innerHTML = "";
-    
     const resDiv = document.getElementById("resultado-final");
-    const txtExp = document.getElementById("texto-expulsado");
-    const txtRev = document.getElementById("texto-revelacion");
-
     resDiv.style.display = "block";
-    txtExp.innerText = res.mensaje;
-    txtExp.style.color = res.terminar ? "#ff5252" : "#ffeb3b";
-
+    document.getElementById("texto-expulsado").innerText = res.mensaje;
+    
     if (res.terminar) {
-        txtRev.innerText = "La frase era: " + res.palabra;
+        document.getElementById("texto-revelacion").innerText = "La frase era: " + res.palabraReal;
         if (esAdmin) document.getElementById("adminNextBtn").style.display = "block";
     } else {
-        txtRev.innerText = "Nueva ronda en breve...";
-        document.getElementById("adminNextBtn").style.display = "none";
+        document.getElementById("texto-revelacion").innerText = "Siguiente ronda en 4 segundos...";
     }
 });
 
-// 9. Controles de Partida
-function reveal() {
-    socket.emit('solicitarRevelar');
-}
-
-function newRound() {
-    socket.emit('iniciarRonda');
-}
-
-socket.on('actualizarLista', (num) => {
-    const countEl = document.getElementById("count");
-    if(countEl) countEl.innerText = num;
-});
+// 7. Controles Admin
+function newRound() { socket.emit('iniciarRonda'); }
+function finalizarMiTurno() { socket.emit('finalizarMiTurno'); }
+socket.on('actualizarLista', (num) => { if(document.getElementById("count")) document.getElementById("count").innerText = num; });
