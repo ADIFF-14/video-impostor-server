@@ -11,22 +11,12 @@ app.use(express.static('public'));
 let jugadores = [];
 let indiceTurno = 0;
 let palabraActual = "";
-let votos = {}; // Para contar los votos de la fase de votación
+let votos = {};
 
-const palabras = [
-    "Avión", "Pizza", "Playa", "Cine", "Fútbol", "WhatsApp", "Hospital", "Perro", 
-    "Gato", "Hamburguesa", "Escuela", "Astronauta", "Biblioteca", "Bicicleta", 
-    "Castillo", "Chocolate", "Dinosaurio", "Elefante", "Estrella", "Fantasma", 
-    "Guitarra", "Helado", "Isla", "Jirafa", "Ketchup", "Limón", "Mago", 
-    "Nieve", "Océano", "Panadería", "Parque", "Queso", "Robot", "Selva", 
-    "Tiburón", "Unicornio", "Vampiro", "Zoológico", "YouTube", "Netflix",
-    "Batman", "Minecraft", "Supermercado", "Internet", "Teléfono", "Reloj"
-];
+const palabras = ["Pizza", "Avión", "WhatsApp", "Minecraft", "Netflix", "Fútbol", "Cine", "Playa"];
 
 io.on('connection', (socket) => {
-    
     socket.on('unirse', (datos) => {
-        // Añadimos la propiedad 'eliminado' y 'rol' a cada jugador
         jugadores.push({ 
             id: socket.id, 
             nombre: datos.nombre, 
@@ -39,20 +29,18 @@ io.on('connection', (socket) => {
     });
 
     socket.on('iniciarRonda', () => {
-        if (jugadores.length < 3) return; // Se recomienda mínimo 3 para votar
-        
+        if (jugadores.length < 2) return;
         indiceTurno = 0;
         votos = {};
         palabraActual = palabras[Math.floor(Math.random() * palabras.length)];
         const impIndex = Math.floor(Math.random() * jugadores.length);
         
         jugadores.forEach((j, i) => {
-            j.eliminado = false; // Resetear estado de eliminación
+            j.eliminado = false;
             j.rol = (i === impIndex) ? "IMPOSTOR" : "CIUDADANO";
             const info = (j.rol === "IMPOSTOR") ? { rol: "IMPOSTOR" } : { rol: "CIUDADANO", palabra: palabraActual };
             io.to(j.id).emit('recibirRol', info);
         });
-
         notificarTurno();
     });
 
@@ -61,78 +49,54 @@ io.on('connection', (socket) => {
         notificarTurno();
     });
 
-    // LÓGICA DE VOTACIÓN
     socket.on('votarJugador', (idVotado) => {
         votos[idVotado] = (votos[idVotado] || 0) + 1;
-        
         const vivos = jugadores.filter(j => !j.eliminado).length;
-        const totalVotosRecibidos = Object.values(votos).reduce((a, b) => a + b, 0);
-
-        if (totalVotosRecibidos >= vivos) {
+        if (Object.values(votos).reduce((a, b) => a + b, 0) >= vivos) {
             procesarVotacion();
         }
     });
 
     function procesarVotacion() {
-        // Encontrar al más votado
         const expulsadoId = Object.keys(votos).reduce((a, b) => votos[a] > votos[b] ? a : b);
-        const jugadorExpulsado = jugadores.find(j => j.id === expulsadoId);
-        
-        jugadorExpulsado.eliminado = true;
-        const esImpostor = (jugadorExpulsado.rol === "IMPOSTOR");
+        const expulsado = jugadores.find(j => j.id === expulsadoId);
+        expulsado.eliminado = true;
 
-        if (esImpostor) {
-            // VICTORIA CIUDADANA
+        if (expulsado.rol === "IMPOSTOR") {
             io.emit('resultadoVotacion', { 
-                mensaje: `¡TE DESCUBRIMOS, ${jugadorExpulsado.nombre.toUpperCase()}! 🔴`, 
+                mensaje: `¡TE DESCUBRIMOS, ${expulsado.nombre.toUpperCase()}! 🔴`, 
                 terminar: true, 
                 palabraReal: palabraActual 
             });
         } else {
             const vivos = jugadores.filter(j => !j.eliminado);
-            const impostorSigueVivo = vivos.some(j => j.rol === "IMPOSTOR");
-
-            // Si quedan 2 personas y una es el impostor, gana el impostor
-            if (vivos.length <= 2 && impostorSigueVivo) {
+            if (vivos.length <= 2) {
                 io.emit('resultadoVotacion', { 
-                    mensaje: "¡EL IMPOSTOR HA DOMINADO LA SALA! 💀", 
+                    mensaje: "¡FALLO TOTAL! El impostor ha dominado la sala. 💀", 
                     terminar: true, 
                     palabraReal: palabraActual 
                 });
             } else {
-                // EL JUEGO CONTINÚA
                 io.emit('resultadoVotacion', { 
-                    mensaje: `¡FALLO TOTAL! ${jugadorExpulsado.nombre} era inocente. El impostor sigue entre nosotros... 😈`, 
+                    mensaje: `¡FALLO TOTAL! ${expulsado.nombre} era inocente. El impostor sigue suelto... 😈`, 
                     terminar: false 
                 });
-                
-                // Reiniciar turnos tras 4 segundos
-                setTimeout(() => {
-                    indiceTurno = 0;
-                    notificarTurno();
-                }, 4000);
+                setTimeout(() => { indiceTurno = 0; notificarTurno(); }, 4000);
             }
         }
         votos = {};
     }
 
     function notificarTurno() {
-        // Saltar a los jugadores que están eliminados
-        while (indiceTurno < jugadores.length && jugadores[indiceTurno].eliminado) {
-            indiceTurno++;
-        }
-
+        while (indiceTurno < jugadores.length && jugadores[indiceTurno].eliminado) { indiceTurno++; }
         if (indiceTurno < jugadores.length) {
-            const jugadorActual = jugadores[indiceTurno];
             io.emit('cambioDeTurno', { 
-                nombre: jugadorActual.nombre, 
-                idSocket: jugadorActual.id,
-                listaActualizada: jugadores // Enviamos la lista para actualizar los cuadritos
+                nombre: jugadores[indiceTurno].nombre, 
+                idSocket: jugadores[indiceTurno].id,
+                listaActualizada: jugadores 
             });
         } else {
-            // Solo los que no están eliminados pueden votar
-            const vivos = jugadores.filter(j => !j.eliminado);
-            io.emit('faseVotacion', vivos);
+            io.emit('faseVotacion', jugadores.filter(j => !j.eliminado));
         }
     }
 
@@ -142,5 +106,4 @@ io.on('connection', (socket) => {
     });
 });
 
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Servidor en puerto ${PORT}`));
+server.listen(process.env.PORT || 3000, () => console.log("Servidor iniciado"));
