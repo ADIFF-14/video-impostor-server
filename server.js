@@ -13,7 +13,7 @@ let indiceTurno = 0;
 let palabraActual = "";
 let votos = {};
 
-const palabras = ["Pizza", "Avión", "WhatsApp", "Minecraft", "Netflix", "Fútbol", "Cine", "Playa", "Gimnasio", "Hamburguesa"];
+const palabras = ["Pizza", "Avión", "WhatsApp", "Minecraft", "Netflix", "Fútbol", "Cine", "Playa", "Gato", "Reloj"];
 
 io.on('connection', (socket) => {
     socket.on('unirse', (datos) => {
@@ -29,7 +29,9 @@ io.on('connection', (socket) => {
     });
 
     socket.on('iniciarRonda', () => {
+        console.log("Anderson ha iniciado la partida");
         if (jugadores.length < 2) return;
+        
         indiceTurno = 0;
         votos = {};
         palabraActual = palabras[Math.floor(Math.random() * palabras.length)];
@@ -45,7 +47,6 @@ io.on('connection', (socket) => {
                 io.to(j.id).emit('recibirRol', { rol: "CIUDADANO", palabra: palabraActual });
             }
         });
-        // Esperamos a que los jugadores vean su rol antes de iniciar turnos
     });
 
     socket.on('listoParaHablar', () => {
@@ -68,6 +69,7 @@ io.on('connection', (socket) => {
     function procesarVotacion() {
         const expulsadoId = Object.keys(votos).reduce((a, b) => votos[a] > votos[b] ? a : b);
         const expulsado = jugadores.find(j => j.id === expulsadoId);
+        if(!expulsado) return;
         expulsado.eliminado = true;
 
         if (expulsado.rol === "IMPOSTOR") {
@@ -80,13 +82,13 @@ io.on('connection', (socket) => {
             const vivos = jugadores.filter(j => !j.eliminado);
             if (vivos.length <= 2) {
                 io.emit('resultadoVotacion', { 
-                    mensaje: "¡FALLO TOTAL! El impostor ha dominado la sala. 💀", 
+                    mensaje: "¡FALLO TOTAL! El impostor ganó. 💀", 
                     terminar: true, 
                     palabraReal: palabraActual 
                 });
             } else {
                 io.emit('resultadoVotacion', { 
-                    mensaje: `¡FALLO TOTAL! ${expulsado.nombre} era inocente. El impostor sigue entre nosotros... 😈`, 
+                    mensaje: `¡FALLO TOTAL! ${expulsado.nombre} era inocente... 😈`, 
                     terminar: false 
                 });
                 setTimeout(() => { indiceTurno = 0; notificarTurno(); }, 4000);
@@ -114,4 +116,5 @@ io.on('connection', (socket) => {
     });
 });
 
-server.listen(process.env.PORT || 3000, () => console.log("Servidor Online"));
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => console.log(`Servidor en puerto ${PORT}`));
