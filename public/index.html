@@ -1,45 +1,40 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <title>VideoImpostor</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
-  <script src="https://meet.google.com/extensions/v1/sdk.js"></script>
-  
-  <link rel="stylesheet" href="style.css" />
-</head>
 <body>
 <div id="app">
   <section id="welcome" class="screen active">
-    <h1>👋 Hola, soy Anderson</h1>
-    <p>Bienvenido a <b>VideoImpostor</b></p>
+    <h1>👋 VideoImpostor</h1>
+    <p>Ingresa tu nombre para comenzar:</p>
+    <input type="text" id="userName" placeholder="Tu nombre..." />
     <button onclick="entrarJuego()">Entrar al juego</button>
   </section>
 
   <section id="waiting" class="screen">
     <h2>Conectado</h2>
-    <p>Esperando a que Anderson inicie...</p>
-    <p>Jugadores en sala: <span id="count">0</span></p>
+    <p>Esperando inicio...</p>
+    <p>Jugadores: <span id="count">0</span></p>
     <button id="adminBtn" style="display:none; background:#ffeb3b; color:black;" onclick="newRound()">🚀 INICIAR PARTIDA</button>
   </section>
 
   <section id="role" class="screen">
     <h2 id="roleTitle"></h2>
-    <p id="roleText"></p>
-    <button onclick="finishRound()">Listo, ya lo vi</button>
+    <p id="roleText" style="font-size: 28px; font-weight: bold;"></p>
+    <button onclick="irALosTurnos()">Entendido</button>
+  </section>
+
+  <section id="turnScreen" class="screen">
+    <h2 id="turnStatus">📢 Ronda de pistas</h2>
+    <div id="activeSpeakerContainer" style="padding: 20px; border: 2px solid #ffeb3b; border-radius: 10px; margin: 20px 0;">
+        <p style="font-size: 18px;">Habla ahora:</p>
+        <h1 id="currentSpeakerName" style="color: #ffeb3b;">---</h1>
+    </div>
+    <button id="btnFinalizarTurno" style="display:none; background:#00e676;" onclick="finalizarMiTurno()">✅ He terminado de hablar</button>
+    <p><i>Todos pueden hablar, pero respeta el turno resaltado.</i></p>
   </section>
 
   <section id="end" class="screen">
-    <h2>🕵️ Debate en Meet</h2>
-    <p>¡Discute con tus amigos quién es el impostor!</p>
+    <h2>🕵️ Debate y Votación</h2>
+    <p>¿Quién es el impostor?</p>
     <button onclick="reveal()">🔍 Revelar palabra</button>
     <p id="revealText" style="font-size:24px; margin-top:20px; color:#00e676; font-weight:bold;"></p>
     <button id="adminNextBtn" style="display:none; background:#ffeb3b; color:black;" onclick="newRound()">🔁 Nueva ronda</button>
   </section>
 </div>
-
-<script src="/socket.io/socket.io.js"></script>
-<script src="script.js"></script>
-</body>
-</html>
