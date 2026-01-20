@@ -9,39 +9,44 @@
 </head>
 <body>
 <div id="app">
+    <button id="micBtn" class="btn-mute" onclick="toggleMic()">🎤</button>
+
     <section id="welcome" class="screen active">
         <h1>👋 VideoImpostor</h1>
-        <input type="text" id="userName" placeholder="Nombre...">
-        <button onclick="entrarJuego()">Entrar</button>
+        <input type="text" id="userName" placeholder="Escribe tu nombre...">
+        <button onclick="entrarJuego()">Entrar al Juego</button>
     </section>
 
     <section id="waiting" class="screen">
-        <h2>Esperando inicio...</h2>
-        <p>Jugadores: <b id="count">0</b></p>
-        <button id="adminBtn" style="display:none" onclick="newRound()">🚀 INICIAR</button>
+        <h2>Sala de Espera</h2>
+        <p>Jugadores: <span id="count">0</span></p>
+        <button id="adminBtn" style="display:none" onclick="newRound()">🚀 INICIAR PARTIDA</button>
     </section>
 
     <section id="role" class="screen">
+        <div class="ronda-tag">RONDA <span class="ronda-num">1</span> DE 3</div>
         <h1 id="roleTitle"></h1>
-        <h2 id="roleText"></h2>
+        <h2 id="roleText" style="color:#00e676; font-size:32px; background:#000; padding:15px; border-radius:10px;"></h2>
         <button onclick="irALosTurnos()">ENTENDIDO</button>
     </section>
 
     <section id="turnScreen" class="screen">
+        <div class="ronda-tag">RONDA <span class="ronda-num">1</span> DE 3</div>
         <div id="grid-jugadores" class="player-grid"></div>
-        <div id="activeSpeakerContainer">
-            <p>Hablando ahora:</p>
-            <h1 id="currentSpeakerName">---</h1>
+        <div style="border: 3px solid #ffeb3b; padding: 20px; border-radius: 15px; background:#222;">
+            <p style="margin:0; opacity:0.7;">Hablando ahora:</p>
+            <h1 id="currentSpeakerName" style="margin:10px 0;">---</h1>
         </div>
         <button id="btnFinalizarTurno" onclick="finalizarMiTurno()">TERMINAR DE HABLAR</button>
     </section>
 
     <section id="end" class="screen">
-        <h2 id="voteStatus"></h2>
+        <h2>VOTACIÓN</h2>
         <div id="lista-votacion" class="player-grid"></div>
         <div id="resultado-final" style="display:none">
-            <h1 id="texto-expulsado"></h1><h2 id="texto-revelacion"></h2>
-            <button id="adminNextBtn" style="display:none" onclick="newRound()">NUEVA RONDA</button>
+            <h1 id="texto-expulsado" style="font-size:22px;"></h1>
+            <h2 id="texto-revelacion" style="color:#ffeb3b;"></h2>
+            <button id="adminNextBtn" style="display:none" onclick="newRound()">NUEVA PARTIDA</button>
         </div>
     </section>
 </div>
