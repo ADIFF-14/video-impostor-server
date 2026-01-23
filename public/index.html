@@ -1,50 +1,138 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IMPOSTOR</title>
-    <script src="/socket.io/socket.io.js"></script>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IMPOSTOR - IGLESIA</title>
+  <script src="/socket.io/socket.io.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      background: #080808;
+      color: white;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    #app {
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .screen {
+      display: none;
+      background: #121212;
+      padding: 25px;
+      border-radius: 20px;
+      border: 1px solid #333;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    .btn-big {
+      background: #00e676;
+      color: black;
+      border: none;
+      padding: 16px;
+      width: 100%;
+      font-weight: bold;
+      font-size: 1.1rem;
+      border-radius: 12px;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+
+    .big-input {
+      width: 100%;
+      padding: 16px;
+      font-size: 1.1rem;
+      margin-bottom: 15px;
+      border-radius: 12px;
+      border: none;
+    }
+
+    #admin-panel {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      background: #1a1a1a;
+      border-bottom: 2px solid #00e676;
+      padding: 15px;
+      display: none;
+      z-index: 100;
+      text-align: center;
+    }
+  </style>
 </head>
+
 <body>
-    <div id="admin-panel" style="display:none; background:#1a1a1a; padding:10px; border-bottom:2px solid #00e676; position:fixed; top:0; width:100%; z-index:100;">
-        <div id="admin-info" style="color:#00e676; font-size:12px;"></div>
-        <button id="btn-debate-fijo" class="btn-big" style="display:none; background:#ff9800; margin:5px 0;" onclick="socket.emit('empezarDebateOficial')">🎙️ INICIAR DEBATE</button>
-        <button id="btn-forzar" class="btn-big" style="background:#e74c3c; margin:5px 0;" onclick="socket.emit('adminForzarTurno')">⏩ SIGUIENTE TURNO</button>
+
+  <!-- PANEL ADMIN -->
+  <div id="admin-panel">
+    <div style="color:#00e676; margin-bottom:10px;">
+      🕵️ ADMINISTRADOR
     </div>
 
-    <div id="app">
-        <section id="welcome" class="screen active">
-            <h1 class="main-title">IMPOSTOR</h1>
-            <input type="text" id="userName" class="big-input" placeholder="Tu Nombre">
-            <button class="btn-big" onclick="entrarJuego()">ENTRAR</button>
-        </section>
+    <button id="adminBtn" class="btn-big"
+      onclick="socket.emit('iniciarPartida')">
+      🚀 REPARTIR FRASES
+    </button>
 
-        <section id="waiting" class="screen">
-            <h2>SALA DE ESPERA</h2>
-            <p>Hermanos conectados: <span id="count">0</span></p>
-            <button id="adminBtn" style="display:none" class="btn-big" onclick="socket.emit('iniciarRonda')">🚀 REPARTIR FRASES</button>
-        </section>
+    <button class="btn-big" style="background:#ff9800; margin-top:10px;"
+      onclick="socket.emit('iniciarDebate')">
+      🎙️ INICIAR DEBATE
+    </button>
+  </div>
 
-        <section id="role" class="screen">
-            <h2 id="roleTitle"></h2>
-            <h1 id="roleText" style="color:#00e676"></h1>
-        </section>
+  <div id="app">
 
-        <section id="turnScreen" class="screen">
-            <h2 style="opacity:0.5">HABLANDO:</h2>
-            <h1 id="currentSpeakerName" style="color:#00e676">---</h1>
-            <button id="btnFinalizarTurno" class="btn-big" style="display:none" onclick="socket.emit('finalizarMiTurno')">TERMINAR MI TURNO</button>
-        </section>
+    <!-- BIENVENIDA -->
+    <section id="welcome" class="screen active">
+      <h1 style="color:#00e676; font-size:3rem;">IMPOSTOR</h1>
+      <input type="text" id="userName" class="big-input" placeholder="Tu Nombre">
+      <button class="btn-big" onclick="entrarJuego()">ENTRAR</button>
+    </section>
 
-        <section id="end" class="screen"><h2>VOTACIÓN</h2><div id="lista-votacion"></div></section>
+    <!-- ESPERA -->
+    <section id="waiting" class="screen">
+      <h2>SALA DE ESPERA</h2>
+      <p>Jugadores conectados: <span id="count">0</span></p>
+    </section>
 
-        <section id="result" class="screen">
-            <h1 id="texto-res"></h1>
-            <h2 id="texto-palabra" style="color:#00e676"></h2>
-            <button id="btn-reiniciar" style="display:none" class="btn-big" onclick="socket.emit('iniciarRonda')">🔄 OTRA PARTIDA</button>
-        </section>
-    </div>
-    <script src="script.js"></script>
+    <!-- ROL -->
+    <section id="role" class="screen">
+      <h2 id="roleTitle"></h2>
+      <h1 id="roleText" style="color:#00e676;"></h1>
+    </section>
+
+    <!-- TURNO -->
+    <section id="turnScreen" class="screen">
+      <h2>HABLANDO:</h2>
+      <h1 id="currentSpeakerName" style="color:#00e676;"></h1>
+      <button id="btnFinalizarTurno" class="btn-big"
+        onclick="socket.emit('terminarTurno')"
+        style="display:none;">
+        TERMINAR TURNO
+      </button>
+    </section>
+
+    <!-- VOTACIÓN -->
+    <section id="end" class="screen">
+      <h2>VOTACIÓN</h2>
+      <div id="lista-votacion"></div>
+    </section>
+
+  </div>
+
+  <script src="script.js"></script>
 </body>
 </html>
+
