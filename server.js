@@ -14,7 +14,7 @@ let palabraActual = "";
 let votosRecibidos = {}; 
 let rondaActual = 1;
 
-const palabras = ["Pizza", "Avión", "WhatsApp", "Netflix", "Fútbol", "Cine", "Playa", "Gato", "Reloj", "Bicicleta", "Internet", "Navidad", "Música", "Helado", "Libro", "Carro", "Perro", "Viaje", "Tacos", "Guitarra", "Hospital", "Cámara", "Luna", "Dinero", "Piscina", "Videojuego"];
+const palabras = ["Pizza", "Avión", "WhatsApp", "Netflix", "Fútbol", "Cine", "Playa", "Gato", "Reloj", "Bicicleta", "Hamburguesa", "Internet", "Instagram", "Parque", "Café", "Escuela", "Navidad", "Música", "Helado", "Libro", "Carro", "Perro", "Sol", "Trabajo", "Viaje", "Tacos", "Guitarra", "Hospital", "Cámara", "Luna", "Dinero", "Piscina", "Televisión", "Dormir", "Bailar", "Fruta", "Chocolate", "YouTube", "Teléfono", "Estudiar", "Policía", "Bombero", "Estadio", "Cerveza", "Sushi", "Zapato", "Verano", "Maleta", "Videojuego"];
 
 function mezclar(array) {
     for (let i = array.length - 1; i > 0; i--) {
@@ -35,8 +35,7 @@ io.on('connection', (socket) => {
             socket.join('sala_admin');
             return socket.emit('vistas', 'ADMIN');
         }
-        const nuevo = { id: socket.id, nombre: datos.nombre, eliminado: false, rol: "" };
-        jugadores.push(nuevo);
+        jugadores.push({ id: socket.id, nombre: datos.nombre, eliminado: false, rol: "" });
         socket.emit('vistas', 'JUGADOR');
         io.emit('actualizarLista', jugadores.length);
         io.to('sala_proyeccion').emit('listaInicialProyeccion', jugadores);
@@ -63,7 +62,7 @@ io.on('connection', (socket) => {
         indiceTurno = 0;
         let vivos = jugadores.filter(j => !j.eliminado);
         ordenHablar = mezclar([...vivos]);
-        if (ordenHablar[0].rol === "IMPOSTOR") { ordenHablar.push(ordenHablar.shift()); }
+        if (ordenHablar[0].rol === "IMPOSTOR") ordenHablar.push(ordenHablar.shift());
         notificarTurno();
     });
 
