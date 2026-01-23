@@ -27,10 +27,20 @@ socket.on('infoSecretaAdmin', (data) => {
 });
 
 socket.on('recibirRol', (data) => {
-    document.getElementById("roleTitle").innerText = (data.rol === "IMPOSTOR") ? "ERES EL IMPOSTOR" : "TU PALABRA:";
-    document.getElementById("roleText").innerText = (data.rol === "IMPOSTOR") ? "Miente" : data.palabra;
+    if (data.rol === "IMPOSTOR") {
+        document.getElementById("roleTitle").innerText = "ERES EL IMPOSTOR";
+        document.getElementById("roleText").innerText = "Tu misión: descubre la palabra secreta";
+    } else {
+        document.getElementById("roleTitle").innerText = "TU FRASE ES:";
+        document.getElementById("roleText").innerText = data.palabra;
+    }
+    
     showScreen("role");
-    if (esAdmin) document.getElementById("startDebateBtn").style.display = "block";
+    
+    // Mostramos botón de debate SOLO a Anderson
+    if (esAdmin) {
+        document.getElementById("startDebateBtn").style.display = "block";
+    }
 });
 
 socket.on('cambioDeTurno', (data) => {
@@ -50,14 +60,14 @@ socket.on('cambioDeTurno', (data) => {
 socket.on('faseVotacion', (vivos) => {
     showScreen("end");
     const lista = document.getElementById("lista-votacion");
-    lista.innerHTML = esAdmin ? "Esperando votos..." : "";
+    lista.innerHTML = esAdmin ? "<p style='color:#00e676'>Votación en curso...</p>" : "";
     if (!esAdmin) {
         vivos.forEach(j => {
             if(j.id !== socket.id) {
                 const b = document.createElement("button");
                 b.className = "btn-voto";
                 b.innerText = j.nombre;
-                b.onclick = () => { socket.emit('votarJugador', j.id); lista.innerHTML = "Voto enviado"; };
+                b.onclick = () => { socket.emit('votarJugador', j.id); lista.innerHTML = "Voto enviado correctamente"; };
                 lista.appendChild(b);
             }
         });
@@ -68,8 +78,10 @@ socket.on('resultadoVotacion', (res) => {
     showScreen("result");
     document.getElementById("texto-res").innerText = res.mensaje;
     if (res.terminar) {
-        document.getElementById("texto-palabra").innerText = "Palabra: " + res.palabraReal;
+        document.getElementById("texto-palabra").innerText = "La frase era: " + res.palabraReal;
         if (esAdmin) document.getElementById("btnNext").style.display = "block";
+    } else {
+        document.getElementById("texto-palabra").innerText = "Nadie ha sido atrapado aún...";
     }
 });
 
@@ -78,7 +90,11 @@ function showScreen(id) {
     document.getElementById(id).classList.add("active");
 }
 
-socket.on('actualizarLista', (n) => { document.getElementById("count").innerText = n; });
+socket.on('actualizarLista', (n) => { 
+    const el = document.getElementById("count");
+    if(el) el.innerText = n; 
+});
+
 
 
 
