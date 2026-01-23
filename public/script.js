@@ -32,7 +32,8 @@ socket.on('recibirRol', (data) => {
         document.getElementById("roleText").innerText = data.palabra;
     }
     showScreen("role");
-    // BOTÓN MAESTRO PARA ANDERSON
+    
+    // IMPORTANTE: Anderson recibe el botón de debate en esta pantalla
     if (esAdmin) {
         document.getElementById("btn-debate-admin").style.display = "block";
     }
@@ -47,7 +48,7 @@ socket.on('cambioDeTurno', (data) => {
 socket.on('faseVotacion', (vivos) => {
     showScreen("end");
     const lista = document.getElementById("lista-votacion");
-    lista.innerHTML = esAdmin ? "<p>Votación en curso...</p>" : "";
+    lista.innerHTML = esAdmin ? "Esperando votos..." : "";
     if (!esAdmin) {
         vivos.forEach(j => {
             if (j.id !== socket.id) {
@@ -75,6 +76,7 @@ function showScreen(id) {
 }
 
 socket.on('actualizarLista', (n) => { document.getElementById("count").innerText = n; });
+
 
 
 
