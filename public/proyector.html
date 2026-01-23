@@ -2,30 +2,28 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>PANTALLA GIGANTE - IMPOSTOR</title>
+    <title>PROYECTOR</title>
     <script src="/socket.io/socket.io.js"></script>
     <style>
-        body { margin: 0; background: #000; color: white; font-family: 'Arial Black', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; overflow: hidden; }
-        #status-top { font-size: 3rem; color: #444; text-transform: uppercase; letter-spacing: 5px; }
-        #main-name { font-size: 9rem; color: #00e676; margin: 10px 0; text-shadow: 0 0 40px rgba(0,230,118,0.6); }
-        #player-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; width: 90%; margin-top: 50px; }
-        .p-card { padding: 20px; background: #111; border: 4px solid #333; border-radius: 20px; font-size: 1.8rem; transition: 0.3s; color: #888; }
-        .p-active { border-color: #00e676; background: #002211; color: #fff; transform: scale(1.15); box-shadow: 0 0 30px #00e676; }
-        .p-eliminated { opacity: 0.15; text-decoration: line-through; border-color: #ff0000; }
-        #overlay-result { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
+        body { margin: 0; background: #000; color: white; font-family: 'Arial Black', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; }
+        #header { background: #00e676; color: black; padding: 10px; font-size: 2.5rem; width: 100%; position: fixed; top: 0; }
+        #main-val { font-size: 8rem; color: #fff; margin-top: 50px; }
+        #vote-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; width: 90%; margin-top: 40px; }
+        .v-card { background: #121212; border: 3px solid #333; border-radius: 15px; padding: 20px; min-width: 180px; }
+        .v-name { font-size: 1.5rem; color: #fff; margin-bottom: 10px; }
+        .v-count { font-size: 5rem; color: #00e676; font-weight: 900; }
+        #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
     </style>
 </head>
 <body>
-    <div id="status-top">SALA DE ESPERA</div>
-    <div id="main-name">IMPOSTOR</div>
-    <div id="player-grid"></div>
-
-    <div id="overlay-result">
-        <h1 id="over-titulo" style="font-size: 8rem;"></h1>
-        <h2 id="over-sub" style="font-size: 4rem; opacity: 0.8;"></h2>
-        <h1 id="over-palabra" style="font-size: 5rem; color: #ff9800; margin-top: 60px;"></h1>
+    <div id="header">TURNO DE: <span id="turno-header">ESPERANDO</span></div>
+    <div id="main-val">IMPOSTOR</div>
+    <div id="vote-grid"></div>
+    <div id="overlay">
+        <h1 id="o-titulo" style="font-size: 7rem;"></h1>
+        <h2 id="o-sub" style="font-size: 3rem; opacity: 0.8;"></h2>
+        <h1 id="o-palabra" style="font-size: 4rem; color: #ff9800; margin-top: 40px;"></h1>
     </div>
-
     <script src="proyector.js"></script>
 </body>
 </html>
