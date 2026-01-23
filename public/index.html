@@ -1,60 +1,44 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>PROYECTOR - VOTACIÓN</title>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMPOSTOR</title>
     <script src="/socket.io/socket.io.js"></script>
     <style>
-        body { margin: 0; background: #000; color: white; font-family: 'Arial Black', sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-        #header { background: #00e676; color: black; padding: 15px; font-size: 2.5rem; font-weight: 900; text-transform: uppercase; width: 100%; box-sizing: border-box; }
-        #main-container { flex: 1; display: flex; flex-wrap: wrap; justify-content: center; align-content: center; gap: 25px; padding: 40px; }
-        
-        /* Estilo voo.PNG */
-        .v-card { background: #121212; border: 2px solid #333; border-radius: 15px; padding: 25px; min-width: 200px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .v-name { font-size: 1.8rem; color: #fff; margin-bottom: 15px; text-transform: lowercase; }
-        .v-count { font-size: 6rem; color: #00e676; font-weight: 900; line-height: 1; text-shadow: 0 0 20px rgba(0,230,118,0.4); }
-        
-        .eliminado { opacity: 0.2; transform: scale(0.9); }
+        body { margin: 0; background: #080808; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; }
+        .screen { display: none; background: #121212; padding: 25px; border-radius: 20px; width: 85%; max-width: 400px; border: 1px solid #333; }
+        .active { display: block; }
+        .btn-big { background: #00e676; color: black; border: none; padding: 15px; width: 100%; font-weight: bold; border-radius: 10px; cursor: pointer; margin-top: 15px; font-size: 1.1rem; }
+        .btn-voto { background: #fff !important; color: #000 !important; font-weight: 900; margin-bottom: 8px; border: none; padding: 12px; width: 100%; border-radius: 8px; font-size: 1.1rem; }
+        #admin-panel { position: fixed; top: 0; width: 100%; background: #1a1a1a; border-bottom: 2px solid #00e676; padding: 10px; display: none; }
     </style>
 </head>
 <body>
-    <div id="header">TURNO DE: <span id="turno-actual">ESPERANDO</span></div>
-    <div id="main-container">
-        </div>
-
-    <script>
-        const socket = io();
-        socket.emit('unirse', { nombre: 'proyector' });
-
-        socket.on('listaInicialProyeccion', (jugadores) => {
-            renderizarCuadros(jugadores, {});
-        });
-
-        socket.on('actualizarVotosProyeccion', (votos) => {
-            // Actualizar solo los números sin redibujar todo
-            Object.keys(votos).forEach(id => {
-                const el = document.getElementById(`voto-${id}`);
-                if (el) el.innerText = votos[id];
-            });
-        });
-
-        socket.on('turnoEnPantalla', (nombre) => {
-            document.getElementById('turno-actual').innerText = nombre;
-        });
-
-        function renderizarCuadros(jugadores, votos) {
-            const container = document.getElementById('main-container');
-            container.innerHTML = "";
-            jugadores.forEach(j => {
-                const card = document.createElement('div');
-                card.className = `v-card ${j.eliminado ? 'eliminado' : ''}`;
-                card.innerHTML = `
-                    <div class="v-name">${j.nombre}</div>
-                    <div class="v-count" id="voto-${j.id}">${votos[j.id] || 0}</div>
-                `;
-                container.appendChild(card);
-            });
-        }
-    </script>
+    <div id="admin-panel">
+        <div id="admin-info" style="color: #00e676; font-size: 0.8rem; margin-bottom: 5px;"></div>
+        <button id="btn-debate-fijo" class="btn-big" style="display:none; background:#ff9800; color:white; margin:0;" onclick="socket.emit('empezarDebateOficial')">🎙️ DEBATE</button>
+        <button id="btn-forzar" class="btn-big" style="display:none; background:#e74c3c; color:white; margin:0;" onclick="socket.emit('adminForzarTurno')">⏩ SIGUIENTE</button>
+    </div>
+    <div id="app">
+        <section id="welcome" class="screen active">
+            <h1 style="color:#00e676">IMPOSTOR</h1>
+            <input type="text" id="userName" style="width:90%; padding:12px; border-radius:8px; border:none; margin-bottom:10px;" placeholder="Tu Nombre">
+            <button class="btn-big" onclick="entrarJuego()">ENTRAR</button>
+        </section>
+        <section id="waiting" class="screen">
+            <h2>SALA DE ESPERA</h2>
+            <p>Conectados: <span id="count">0</span></p>
+            <button id="adminBtn" style="display:none" class="btn-big" onclick="socket.emit('iniciarRonda')">🚀 LANZAR PARTIDA</button>
+        </section>
+        <section id="role" class="screen"><h2 id="roleTitle"></h2><h1 id="roleText" style="color:#00e676"></h1></section>
+        <section id="turnScreen" class="screen">
+            <h2 style="opacity:0.5">Hablando:</h2>
+            <h1 id="currentSpeakerName" style="color:#00e676">---</h1>
+            <button id="btnFinalizarTurno" class="btn-big" style="display:none" onclick="socket.emit('finalizarMiTurno')">PASAR TURNO</button>
+        </section>
+        <section id="end" class="screen"><h2>VOTA AL IMPOSTOR</h2><div id="lista-votacion"></div></section>
+        <section id="result" class="screen"><h1 id="texto-res"></h1><h2 id="texto-palabra" style="color:#00e676"></h2><button id="btn-reiniciar" style="display:none" class="btn-big" onclick="socket.emit('iniciarRonda')">🔄 NUEVA PARTIDA</button></section>
+    </div>
+    <script src="script.js"></script>
 </body>
 </html>
