@@ -9,12 +9,11 @@
 <body>
 <div id="app">
     <div id="admin-panel" style="display:none; background:#1a1a1a; padding:15px; border-bottom:3px solid #00e676; font-weight:bold;">
-        🕵️ MODO ADMIN: <span id="admin-info" style="color:#00e676"></span>
+        🕵️ INFO ADMIN: <span id="admin-info" style="color:#00e676"></span>
     </div>
 
     <section id="welcome" class="screen active">
         <h1 class="main-title">IMPOSTOR</h1>
-        <p class="welcome-msg">Bienvenido a la dinámica del juego</p>
         <input type="text" id="userName" class="big-input" placeholder="Tu Nombre">
         <button class="btn-big" onclick="entrarJuego()">ENTRAR</button>
     </section>
@@ -28,17 +27,17 @@
     <section id="role" class="screen">
         <h2 id="roleTitle" style="opacity:0.6; font-size:18px;"></h2>
         <h1 id="roleText" style="color:#00e676; font-size:40px; margin:20px 0;"></h1>
-        <p style="font-size:14px; opacity:0.5;">Atento a las instrucciones de Anderson</p>
-        <button id="startDebateBtn" style="display:none; background:#e67e22; color:white;" class="btn-big" onclick="socket.emit('empezarDebateOficial')">EMPEZAR DEBATE</button>
+        <p style="font-size:14px; opacity:0.5;">Atento a Anderson</p>
+        <button id="startDebateBtn" style="display:none; background:#e67e22; color:white;" class="btn-big" onclick="iniciarDebate()">EMPEZAR DEBATE</button>
     </section>
 
     <section id="turnScreen" class="screen">
         <div id="grid-jugadores" class="player-grid"></div>
         <div style="background:#222; padding:20px; border-radius:15px;">
-            <p style="opacity:0.5; margin:0;">En el turno:</p>
+            <p style="opacity:0.5; margin:0;">Hablando:</p>
             <h1 id="currentSpeakerName">---</h1>
         </div>
-        <button id="btnFinalizarTurno" class="btn-big" style="display:none; margin-top:15px;" onclick="socket.emit('finalizarMiTurno')">CEDER TURNO</button>
+        <button id="btnFinalizarTurno" class="btn-big" style="display:none; margin-top:15px;" onclick="socket.emit('finalizarMiTurno')">PASAR TURNO</button>
     </section>
 
     <section id="end" class="screen">
@@ -47,8 +46,8 @@
     </section>
 
     <section id="result" class="screen">
-        <h1 id="texto-res" style="font-size:22px;"></h1>
-        <h2 id="texto-palabra" style="margin-top:20px; color:#00e676;"></h2>
+        <h1 id="texto-res" style="white-space: pre-wrap;"></h1>
+        <h2 id="texto-palabra"></h2>
         <button id="btnNext" style="display:none" class="btn-big" onclick="socket.emit('iniciarRonda')">🔄 NUEVA PARTIDA</button>
     </section>
 </div>
