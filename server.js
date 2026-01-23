@@ -26,9 +26,10 @@ function mezclar(array) {
 
 io.on('connection', (socket) => {
     socket.on('unirse', (datos) => {
-        jugadores.push({ id: socket.id, nombre: datos.nombre, peerId: datos.peerId, eliminado: false, rol: "" });
+        // Eliminado peerId de los datos del jugador
+        jugadores.push({ id: socket.id, nombre: datos.nombre, eliminado: false, rol: "" });
         io.emit('actualizarLista', jugadores.length);
-        io.emit('listaParaAudio', jugadores); 
+        // Eliminado evento listaParaAudio
     });
 
     socket.on('iniciarRonda', () => {
@@ -58,7 +59,6 @@ io.on('connection', (socket) => {
     });
 
     function notificarTurno() {
-        // Si aún hay gente en la lista para hablar
         if (indiceTurno < ordenHablar.length) {
             io.emit('cambioDeTurno', { 
                 nombre: ordenHablar[indiceTurno].nombre, 
@@ -66,7 +66,6 @@ io.on('connection', (socket) => {
                 lista: jugadores 
             });
         } else {
-            // ¡IMPORTANTE! Aquí es donde forzamos la votación cuando ya no quedan turnos
             io.emit('faseVotacion', jugadores.filter(j => !j.eliminado));
         }
     }
@@ -121,4 +120,5 @@ io.on('connection', (socket) => {
         io.emit('actualizarLista', jugadores.length);
     });
 });
+
 server.listen(process.env.PORT || 3000);
