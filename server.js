@@ -27,19 +27,21 @@ function mezclar(array) {
 io.on('connection', (socket) => {
     socket.on('unirse', (datos) => {
         const nombre = datos.nombre.toLowerCase().trim();
+        
         if (nombre === 'proyector') {
             socket.join('sala_proyeccion');
-            socket.emit('vistas', 'PROYECTOR');
-            return;
+            return socket.emit('vistas', 'PROYECTOR');
         }
         if (nombre === 'anderson') {
             socket.join('sala_admin');
-            socket.emit('vistas', 'ADMIN');
-            socket.emit('actualizarLista', jugadores.length);
-            return;
+            return socket.emit('vistas', 'ADMIN');
         }
-        jugadores.push({ id: socket.id, nombre: datos.nombre, eliminado: false, rol: "" });
-        socket.emit('vistas', 'JUGADOR');
+
+        // Registro de jugador normal
+        const nuevoJugador = { id: socket.id, nombre: datos.nombre, eliminado: false, rol: "" };
+        jugadores.push(nuevoJugador);
+        
+        socket.emit('vistas', 'JUGADOR'); // Confirmación inmediata al jugador
         io.emit('actualizarLista', jugadores.length);
         io.to('sala_proyeccion').emit('listaInicialProyeccion', jugadores);
     });
@@ -49,6 +51,7 @@ io.on('connection', (socket) => {
         rondaActual = 1;
         votosRecibidos = {};
         jugadores.forEach(j => { j.eliminado = false; j.rol = "CIUDADANO"; });
+        
         const impIndex = Math.floor(Math.random() * jugadores.length);
         jugadores[impIndex].rol = "IMPOSTOR";
         palabraActual = palabras[Math.floor(Math.random() * palabras.length)];
@@ -57,15 +60,23 @@ io.on('connection', (socket) => {
             const info = (j.rol === "IMPOSTOR") ? { rol: "IMPOSTOR" } : { rol: "CIUDADANO", palabra: palabraActual };
             io.to(j.id).emit('recibirRol', info);
         });
+
         io.to('sala_admin').emit('infoSecretaAdmin', { jugadores, palabra: palabraActual });
         io.to('sala_proyeccion').emit('pantallaEstado', 'JUEGO_INICIADO');
-        io.to('sala_proyeccion').emit('listaInicialProyeccion', jugadores);
     });
 
     socket.on('empezarDebateOficial', () => {
         indiceTurno = 0;
-        votosRecibidos = {};
-        ordenHablar = mezclar(jugadores.filter(j => !j.eliminado));
+        let vivos = jugadores.filter(j => !j.eliminado);
+        let lista = mezclar([...vivos]);
+
+        // REGLA: El impostor nunca inicia hablando
+        if (lista[0].rol === "IMPOSTOR") {
+            const temp = lista.shift();
+            lista.push(temp);
+        }
+
+        ordenHablar = lista;
         notificarTurno();
     });
 
@@ -119,6 +130,7 @@ io.on('connection', (socket) => {
         });
         io.to('sala_proyeccion').emit('resultadoFinalProyeccion', { expulsado: expulsado?.nombre, esImpostor: expulsado?.rol === "IMPOSTOR" });
         rondaActual++;
+        votosRecibidos = {};
     }
 
     socket.on('disconnect', () => {
