@@ -61,7 +61,6 @@ io.on('connection', (socket) => {
         io.to('sala_proyeccion').emit('listaInicialProyeccion', jugadores);
     });
 
-    // ESTA FUNCIÓN ES LA QUE ACTIVA LOS TURNOS
     socket.on('empezarDebateOficial', () => {
         indiceTurno = 0;
         votosRecibidos = {};
@@ -77,11 +76,7 @@ io.on('connection', (socket) => {
 
     function notificarTurno() {
         if (indiceTurno < ordenHablar.length) {
-            const datosTurno = { 
-                nombre: ordenHablar[indiceTurno].nombre, 
-                idSocket: ordenHablar[indiceTurno].id, 
-                lista: jugadores 
-            };
+            const datosTurno = { nombre: ordenHablar[indiceTurno].nombre, idSocket: ordenHablar[indiceTurno].id, lista: jugadores };
             io.emit('cambioDeTurno', datosTurno);
             io.to('sala_proyeccion').emit('turnoEnPantalla', datosTurno.nombre);
         } else {
@@ -100,9 +95,9 @@ io.on('connection', (socket) => {
         Object.keys(votosRecibidos).forEach(id => { conteoVotos[id] = votosRecibidos[id].length; });
         io.to('sala_proyeccion').emit('actualizarVotosProyeccion', conteoVotos);
 
-        const totalVotos = Object.values(votosRecibidos).flat().length;
-        const vivos = jugadores.filter(j => !j.eliminado).length;
-        if (totalVotos >= vivos) { procesarVotacion(); }
+        if (Object.values(votosRecibidos).flat().length >= jugadores.filter(j => !j.eliminado).length) {
+            procesarVotacion();
+        }
     });
 
     function procesarVotacion() {
@@ -118,7 +113,6 @@ io.on('connection', (socket) => {
         const expulsado = jugadores.find(j => j.id === expId);
         if(!expulsado) return;
         expulsado.eliminado = true;
-
         const data = { expulsado: expulsado.nombre, esImpostor: expulsado.rol === "IMPOSTOR", detalle: resumen, palabraReal: palabraActual };
         io.emit('resultadoVotacion', { mensaje: resumen, terminar: data.esImpostor || rondaActual >= 3, palabraReal: palabraActual });
         io.to('sala_proyeccion').emit('resultadoFinalProyeccion', data);
