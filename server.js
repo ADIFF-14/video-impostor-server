@@ -26,51 +26,55 @@ function mezclar(array) {
 }
 
 io.on('connection', (socket) => {
+    console.log('Nueva conexión detectada:', socket.id);
 
-    // Manejo de roles al conectarse
+    // Identificar si es el proyector
     socket.on('registrarTipo', (tipo) => {
         if (tipo === 'PROYECTOR') {
             socket.join('sala_proyeccion');
-            // Enviamos lista inicial si ya hay jugadores
-            socket.emit('listaInicialProyeccion', jugadores);
+            socket.emit('listaInicialProyeccion', jugadores.filter(j => !j.eliminado));
+            console.log('Pantalla de Proyección vinculada.');
         }
     });
 
     socket.on('unirse', (datos) => {
+        // Lógica para Anderson (Admin)
         if (datos.nombre.toLowerCase() === 'anderson') {
             adminSocketId = socket.id;
             socket.join('sala_admin');
-            console.log("Admin Anderson se ha conectado.");
-            return; // No se agrega a la lista de jugadores
+            console.log("Admin Anderson conectado.");
+            return; 
         }
 
+        // Lógica para Jugadores normales
         jugadores.push({ id: socket.id, nombre: datos.nombre, eliminado: false, rol: "" });
         io.emit('actualizarLista', jugadores.length);
-        io.to('sala_proyeccion').emit('listaInicialProyeccion', jugadores);
+        io.to('sala_proyeccion').emit('listaInicialProyeccion', jugadores.filter(j => !j.eliminado));
     });
 
     socket.on('iniciarRonda', () => {
         if (jugadores.length < 3) return;
         rondaActual = 1;
+        votosRecibidos = {};
         jugadores.forEach(j => { j.eliminado = false; j.rol = "CIUDADANO"; });
         
         const impIndex = Math.floor(Math.random() * jugadores.length);
         jugadores[impIndex].rol = "IMPOSTOR";
         palabraActual = palabras[Math.floor(Math.random() * palabras.length)];
         
-        // Enviar roles a jugadores
         jugadores.forEach((j) => {
             const info = (j.rol === "IMPOSTOR") ? { rol: "IMPOSTOR" } : { rol: "CIUDADANO", palabra: palabraActual };
             io.to(j.id).emit('recibirRol', info);
         });
 
-        // OJO DE DIOS: El admin recibe quién es quién y la palabra
+        // Ojo de Dios para Anderson
         io.to('sala_admin').emit('infoSecretaAdmin', {
             jugadores: jugadores,
             palabra: palabraActual
         });
 
         io.to('sala_proyeccion').emit('pantallaEstado', 'JUEGO_INICIADO');
+        io.to('sala_proyeccion').emit('listaInicialProyeccion', jugadores);
     });
 
     socket.on('empezarDebateOficial', () => {
@@ -79,7 +83,6 @@ io.on('connection', (socket) => {
         let vivos = jugadores.filter(j => !j.eliminado);
         let listaMezclada = mezclar([...vivos]);
         
-        // El impostor nunca empieza primero
         if (listaMezclada.length > 1 && listaMezclada[0].rol === "IMPOSTOR") {
             const impostor = listaMezclada.shift();
             const nuevaPos = Math.floor(Math.random() * listaMezclada.length) + 1;
@@ -108,13 +111,12 @@ io.on('connection', (socket) => {
 
     socket.on('votarJugador', (idVotado) => {
         const votante = jugadores.find(j => j.id === socket.id);
-        if (!votante) return; // Si el admin intentara votar (no debería)
+        if (!votante) return; 
 
         if (!votosRecibidos[idVotado]) votosRecibidos[idVotado] = [];
         votosRecibidos[idVotado].push(votante.nombre);
 
-        // ACTUALIZACIÓN EN TIEMPO REAL PARA EL PROYECTOR
-        // Enviamos el conteo de votos por ID
+        // Envío de votos en tiempo real al proyector
         const conteoVotos = {};
         Object.keys(votosRecibidos).forEach(id => {
             conteoVotos[id] = votosRecibidos[id].length;
@@ -122,9 +124,9 @@ io.on('connection', (socket) => {
         io.to('sala_proyeccion').emit('actualizarVotosProyeccion', conteoVotos);
 
         const totalVotos = Object.values(votosRecibidos).reduce((acc, curr) => acc + curr.length, 0);
-        const vivos = jugadores.filter(j => !j.eliminado).length;
+        const vivosCount = jugadores.filter(j => !j.eliminado).length;
 
-        if (totalVotos >= vivos) {
+        if (totalVotos >= vivosCount) {
             procesarVotacion();
         }
     });
@@ -166,7 +168,7 @@ io.on('connection', (socket) => {
             if (rondaActual < 3) {
                 rondaActual++;
                 io.emit('resultadoVotacion', { mensaje: `¡ERROR! ${dataFinal.expulsado} era INOCENTE.\n\n${resumenDetallado}`, terminar: false });
-                io.to('sala_proyeccion').emit('resultadoFinalProyeccion', { ...dataFinal, mensajeRonda: "INOCENTE EXPULSADO - Siguiente Ronda" });
+                io.to('sala_proyeccion').emit('resultadoFinalProyeccion', { ...dataFinal, mensajeRonda: "INOCENTE EXPULSADO" });
             } else {
                 io.emit('resultadoVotacion', { mensaje: `¡DERROTA! El impostor ganó.\n\n${resumenDetallado}`, terminar: true, palabraReal: palabraActual });
                 io.to('sala_proyeccion').emit('resultadoFinalProyeccion', dataFinal);
@@ -178,8 +180,17 @@ io.on('connection', (socket) => {
     socket.on('disconnect', () => {
         jugadores = jugadores.filter(j => j.id !== socket.id);
         io.emit('actualizarLista', jugadores.length);
-        io.to('sala_proyeccion').emit('listaInicialProyeccion', jugadores);
+        io.to('sala_proyeccion').emit('listaInicialProyeccion', jugadores.filter(j => !j.eliminado));
     });
 });
 
-server.listen(process.env.PORT || 3000);
+// ESCUCHA EN EL PUERTO 3000 Y EN TODAS LAS INTERFACES DE RED
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, '0.0.0.0', () => {
+    console.log(`=========================================`);
+    console.log(`SERVIDOR INICIADO CORRECTAMENTE`);
+    console.log(`Entrar local: http://localhost:${PORT}`);
+    console.log(`Entrar red: http://192.168.1.4:${PORT}`);
+    console.log(`Proyector: http://192.168.1.4:${PORT}/proyector.html`);
+    console.log(`=========================================`);
+});
