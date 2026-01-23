@@ -17,26 +17,22 @@ socket.on('pantallaEstado', (estado) => {
     if (estado === 'JUEGO_INICIADO') {
         document.getElementById('esperando').style.display = 'none';
         document.getElementById('juego-activo').style.display = 'block';
+        document.getElementById('mensaje-central').style.display = 'none';
     }
     if (estado === 'VOTACION_ABIERTA') {
         document.getElementById('turno-gigante').innerText = "¡VOTEN AHORA!";
-        document.getElementById('turno-gigante').style.background = "#e67e22";
     }
 });
 
 socket.on('turnoEnPantalla', (nombre) => {
     document.getElementById('nombre-turno').innerText = nombre;
-    document.getElementById('turno-gigante').style.background = "#00e676";
+    document.getElementById('turno-gigante').innerText = "TURNO DE: " + nombre;
 });
 
 socket.on('actualizarVotosProyeccion', (conteo) => {
     for (let id in conteo) {
         const el = document.getElementById(`votos-${id}`);
-        if (el) {
-            el.innerText = conteo[id];
-            document.getElementById(`tarjeta-${id}`).classList.add('voto-recibido');
-            setTimeout(() => document.getElementById(`tarjeta-${id}`).classList.remove('voto-recibido'), 300);
-        }
+        if (el) el.innerText = conteo[id];
     }
 });
 
