@@ -1,49 +1,28 @@
 const socket = io();
-const peer = new Peer();
-let miStream, miNombre, esAdmin = false, micActivo = true;
-
-navigator.mediaDevices.getUserMedia({ audio: true }).then(s => {
-    miStream = s;
-    peer.on('call', call => {
-        call.answer(miStream);
-        call.on('stream', rem => { const a = document.createElement('audio'); a.srcObject = rem; a.play(); });
-    });
-});
-
-socket.on('listaParaAudio', (jugadores) => {
-    jugadores.forEach(u => {
-        if (u.peerId !== peer.id && miStream) {
-            const call = peer.call(u.peerId, miStream);
-            call.on('stream', rem => { const a = document.createElement('audio'); a.srcObject = rem; a.play(); });
-        }
-    });
-});
+let miNombre, esAdmin = false;
 
 function entrarJuego() {
     const input = document.getElementById("userName");
     miNombre = input.value || "Jugador_" + Math.floor(Math.random()*100);
+    
+    // Si el nombre es anderson, se activa el modo admin
     if (miNombre.toLowerCase() === "anderson") esAdmin = true;
-    if (peer.id) enviarUnion(); else peer.on('open', enviarUnion);
+    
+    enviarUnion();
 }
 
 function enviarUnion() {
-    socket.emit('unirse', { nombre: miNombre, peerId: peer.id });
+    socket.emit('unirse', { nombre: miNombre });
     showScreen("waiting");
     if (esAdmin) document.getElementById("adminBtn").style.display = "block";
-}
-
-function toggleMic() {
-    micActivo = !micActivo;
-    if (miStream) miStream.getAudioTracks()[0].enabled = micActivo;
-    const btn = document.getElementById("micBtn");
-    btn.innerHTML = micActivo ? "🎤" : "🔇";
-    btn.className = micActivo ? "btn-mute" : "btn-mute muted";
 }
 
 socket.on('recibirRol', (data) => {
     document.getElementById("roleTitle").innerText = (data.rol === "IMPOSTOR") ? "ERES EL IMPOSTOR" : "TU FRASE ES:";
     document.getElementById("roleText").innerText = (data.rol === "IMPOSTOR") ? "Miente para sobrevivir" : data.palabra;
     showScreen("role");
+    
+    // Solo Anderson puede ver el botón para iniciar el debate tras ver la frase
     if (esAdmin) document.getElementById("startDebateBtn").style.display = "block";
 });
 
@@ -63,7 +42,8 @@ socket.on('cambioDeTurno', (data) => {
         grid.appendChild(div);
     });
     document.getElementById("currentSpeakerName").innerText = data.nombre;
-    // El botón solo le sale al que le toca hablar
+    
+    // El botón para terminar turno solo aparece en el dispositivo del que está hablando
     document.getElementById("btnFinalizarTurno").style.display = (socket.id === data.idSocket) ? "block" : "none";
 });
 
