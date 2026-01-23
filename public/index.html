@@ -7,7 +7,7 @@
     <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
-    <div id="admin-panel" style="display:none; background:#1a1a1a; color:#00e676; padding:10px; text-align:center; font-weight:bold; border-bottom:2px solid #00e676;">
+    <div id="admin-panel" style="display:none; background:#1a1a1a; color:#00e676; padding:15px; text-align:center; font-weight:bold; border-bottom:3px solid #00e676;">
         🕵️ INFO ADMIN: <span id="admin-info"></span>
     </div>
 
@@ -21,17 +21,17 @@
         <section id="waiting" class="screen">
             <h2>Sala de Espera</h2>
             <p>Hermanos conectados: <span id="count">0</span></p>
-            <button id="btn-iniciar-ronda" style="display:none" class="btn-big" onclick="socket.emit('iniciarRonda')">🚀 INICIAR JUEGO</button>
+            <button id="btn-iniciar-juego" style="display:none" class="btn-big" onclick="socket.emit('iniciarRonda')">🚀 INICIAR JUEGO</button>
         </section>
 
         <section id="role" class="screen">
             <h2 id="roleTitle"></h2>
             <h1 id="roleText" style="color:#00e676; font-size:40px; margin:20px 0;"></h1>
-            <button id="btn-iniciar-debate" style="display:none; background:#e67e22; color:white;" class="btn-big" onclick="socket.emit('empezarDebateOficial')">EMPEZAR DEBATE</button>
+            <p style="font-size:14px; opacity:0.5;">Atento a las instrucciones de Anderson</p>
+            <button id="btn-debate-admin" style="display:none; background:#e67e22; color:white;" class="btn-big" onclick="socket.emit('empezarDebateOficial')">EMPEZAR DEBATE</button>
         </section>
 
         <section id="turnScreen" class="screen">
-            <div id="grid-jugadores" class="player-grid"></div>
             <div style="background:#222; padding:20px; border-radius:15px;">
                 <p style="opacity:0.5; margin:0;">Hablando:</p>
                 <h1 id="currentSpeakerName">---</h1>
