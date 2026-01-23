@@ -34,14 +34,18 @@ socket.on('recibirRol', (data) => {
         document.getElementById("roleTitle").innerText = "TU FRASE ES:";
         document.getElementById("roleText").innerText = data.palabra;
     }
-    
     showScreen("role");
     
-    // Mostramos botón de debate SOLO a Anderson
+    // Solo Anderson ve el botón para pasar a los turnos
     if (esAdmin) {
         document.getElementById("startDebateBtn").style.display = "block";
     }
 });
+
+// FUNCIÓN PARA QUE ANDERSON INICIE LOS TURNOS
+function iniciarDebate() {
+    socket.emit('empezarDebateOficial');
+}
 
 socket.on('cambioDeTurno', (data) => {
     showScreen("turnScreen");
@@ -54,20 +58,25 @@ socket.on('cambioDeTurno', (data) => {
         grid.appendChild(div);
     });
     document.getElementById("currentSpeakerName").innerText = data.nombre;
+    
+    // El botón de terminar turno SOLO aparece si es MI turno
     document.getElementById("btnFinalizarTurno").style.display = (socket.id === data.idSocket) ? "block" : "none";
 });
 
 socket.on('faseVotacion', (vivos) => {
     showScreen("end");
     const lista = document.getElementById("lista-votacion");
-    lista.innerHTML = esAdmin ? "<p style='color:#00e676'>Votación en curso...</p>" : "";
+    lista.innerHTML = esAdmin ? "<h3 style='color:#00e676'>Votación en curso...</h3>" : "";
     if (!esAdmin) {
         vivos.forEach(j => {
             if(j.id !== socket.id) {
                 const b = document.createElement("button");
                 b.className = "btn-voto";
                 b.innerText = j.nombre;
-                b.onclick = () => { socket.emit('votarJugador', j.id); lista.innerHTML = "Voto enviado correctamente"; };
+                b.onclick = () => { 
+                    socket.emit('votarJugador', j.id); 
+                    lista.innerHTML = "Voto enviado correctamente"; 
+                };
                 lista.appendChild(b);
             }
         });
