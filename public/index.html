@@ -8,43 +8,48 @@
 </head>
 <body>
 <div id="app">
-    <div id="admin-panel" style="display:none; background:#222; padding:10px; font-size:12px; border-bottom:2px solid #00e676;">
-        INFO: <span id="admin-info">Esperando...</span>
+    <div id="admin-panel" style="display:none; background:#1a1a1a; padding:15px; border-bottom:3px solid #00e676; font-weight:bold;">
+        🕵️ MODO ADMIN: <span id="admin-info" style="color:#00e676"></span>
     </div>
 
     <section id="welcome" class="screen active">
         <h1 class="main-title">IMPOSTOR</h1>
+        <p class="welcome-msg">Bienvenido a la dinámica del juego</p>
         <input type="text" id="userName" class="big-input" placeholder="Tu Nombre">
         <button class="btn-big" onclick="entrarJuego()">ENTRAR</button>
     </section>
 
     <section id="waiting" class="screen">
         <h2>Sala de Espera</h2>
-        <p>Jugadores: <span id="count">0</span></p>
-        <button id="adminBtn" style="display:none" class="btn-big" onclick="socket.emit('iniciarRonda')">🚀 INICIAR</button>
+        <p>Hermanos conectados: <span id="count">0</span></p>
+        <button id="adminBtn" style="display:none" class="btn-big" onclick="socket.emit('iniciarRonda')">🚀 INICIAR JUEGO</button>
     </section>
 
     <section id="role" class="screen">
-        <h2 id="roleTitle"></h2>
-        <h1 id="roleText"></h1>
-        <button id="startDebateBtn" style="display:none" class="btn-big" onclick="socket.emit('empezarDebateOficial')">DEBATE</button>
+        <h2 id="roleTitle" style="opacity:0.6; font-size:18px;"></h2>
+        <h1 id="roleText" style="color:#00e676; font-size:40px; margin:20px 0;"></h1>
+        <p style="font-size:14px; opacity:0.5;">Atento a las instrucciones de Anderson</p>
+        <button id="startDebateBtn" style="display:none; background:#e67e22; color:white;" class="btn-big" onclick="socket.emit('empezarDebateOficial')">EMPEZAR DEBATE</button>
     </section>
 
     <section id="turnScreen" class="screen">
         <div id="grid-jugadores" class="player-grid"></div>
-        <h1 id="currentSpeakerName">---</h1>
-        <button id="btnFinalizarTurno" class="btn-big" style="display:none" onclick="socket.emit('finalizarMiTurno')">PASAR TURNO</button>
+        <div style="background:#222; padding:20px; border-radius:15px;">
+            <p style="opacity:0.5; margin:0;">En el turno:</p>
+            <h1 id="currentSpeakerName">---</h1>
+        </div>
+        <button id="btnFinalizarTurno" class="btn-big" style="display:none; margin-top:15px;" onclick="socket.emit('finalizarMiTurno')">CEDER TURNO</button>
     </section>
 
     <section id="end" class="screen">
-        <h2>VOTACIÓN</h2>
+        <h2 style="opacity:0.6;">VOTACIÓN</h2>
         <div id="lista-votacion"></div>
     </section>
 
     <section id="result" class="screen">
-        <h1 id="texto-res"></h1>
-        <h2 id="texto-palabra"></h2>
-        <button id="btnNext" style="display:none" class="btn-big" onclick="socket.emit('iniciarRonda')">REINICIAR</button>
+        <h1 id="texto-res" style="font-size:22px;"></h1>
+        <h2 id="texto-palabra" style="margin-top:20px; color:#00e676;"></h2>
+        <button id="btnNext" style="display:none" class="btn-big" onclick="socket.emit('iniciarRonda')">🔄 NUEVA PARTIDA</button>
     </section>
 </div>
 <script src="script.js"></script>
