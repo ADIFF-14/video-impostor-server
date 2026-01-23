@@ -2,46 +2,28 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>IMPOSTOR - PANTALLA GIGANTE</title>
+    <title>PANTALLA GIGANTE - IMPOSTOR</title>
     <script src="/socket.io/socket.io.js"></script>
     <style>
-        body { margin: 0; background: #000; color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
-        #container { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        
-        /* Títulos */
-        #status-msg { font-size: 3rem; color: #00e676; text-transform: uppercase; margin-bottom: 20px; }
-        #speaker-gigante { font-size: 6rem; font-weight: 900; background: #1a1a1a; padding: 20px 60px; border-radius: 30px; border: 5px solid #00e676; margin-top: 20px; }
-
-        /* Marcador de Votos */
-        #marcador-votos { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; width: 90%; }
-        .tarjeta { background: #111; border: 2px solid #333; padding: 20px; border-radius: 20px; min-width: 200px; transition: 0.3s; }
-        .tarjeta.voto-anim { transform: scale(1.1); border-color: #00e676; box-shadow: 0 0 30px rgba(0, 230, 118, 0.5); }
-        .nombre { font-size: 1.5rem; color: #aaa; margin-bottom: 10px; }
-        .puntos { font-size: 4rem; font-weight: bold; color: #00e676; }
-
-        /* Mensaje de Resultado Final */
-        #resultado-final { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
-        #res-titulo { font-size: 5rem; text-transform: uppercase; }
-        #res-sub { font-size: 3rem; margin-top: 20px; opacity: 0.7; }
+        body { margin: 0; background: #000; color: white; font-family: 'Arial Black', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; overflow: hidden; }
+        #status-top { font-size: 3rem; color: #444; text-transform: uppercase; letter-spacing: 5px; }
+        #main-name { font-size: 9rem; color: #00e676; margin: 10px 0; text-shadow: 0 0 40px rgba(0,230,118,0.6); }
+        #player-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; width: 90%; margin-top: 50px; }
+        .p-card { padding: 20px; background: #111; border: 4px solid #333; border-radius: 20px; font-size: 1.8rem; transition: 0.3s; color: #888; }
+        .p-active { border-color: #00e676; background: #002211; color: #fff; transform: scale(1.15); box-shadow: 0 0 30px #00e676; }
+        .p-eliminated { opacity: 0.15; text-decoration: line-through; border-color: #ff0000; }
+        #overlay-result { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
     </style>
 </head>
 <body>
-    <div id="container">
-        <div id="pantalla-espera">
-            <h1 style="font-size: 5rem; color: #00e676;">IMPOSTOR</h1>
-            <p style="font-size: 2rem; opacity: 0.5;">Esperando que los hermanos se unan...</p>
-        </div>
+    <div id="status-top">SALA DE ESPERA</div>
+    <div id="main-name">IMPOSTOR</div>
+    <div id="player-grid"></div>
 
-        <div id="juego-activo" style="display: none;">
-            <div id="status-msg">En el turno de hablar:</div>
-            <div id="speaker-gigante">---</div>
-            <div id="marcador-votos" style="margin-top: 50px; display: none;"></div>
-        </div>
-    </div>
-
-    <div id="resultado-final">
-        <div id="res-titulo"></div>
-        <div id="res-sub"></div>
+    <div id="overlay-result">
+        <h1 id="over-titulo" style="font-size: 8rem;"></h1>
+        <h2 id="over-sub" style="font-size: 4rem; opacity: 0.8;"></h2>
+        <h1 id="over-palabra" style="font-size: 5rem; color: #ff9800; margin-top: 60px;"></h1>
     </div>
 
     <script src="proyector.js"></script>
