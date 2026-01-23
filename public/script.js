@@ -1,56 +1,120 @@
 const socket = io();
-let soyAdmin = false;
+let esAdmin = false;
 
-function entrar() {
-  const nombre = document.getElementById('nombre').value;
-  socket.emit('unirse', { nombre });
+/* =========================
+   ENTRAR AL JUEGO
+========================= */
+function entrarJuego() {
+  const input = document.getElementById("userName");
+  if (!input) {
+    alert("No se encontró el campo de nombre");
+    return;
+  }
+
+  const nombre = input.value.trim();
+  if (nombre === "") {
+    alert("Escribe tu nombre");
+    return;
+  }
+
+  socket.emit("unirse", { nombre });
 }
 
-socket.on('vista', (tipo) => {
-  if (tipo === 'ADMIN') {
-    soyAdmin = true;
-    document.getElementById('admin').style.display = 'block';
+/* =========================
+   VISTA SEGÚN ROL
+========================= */
+socket.on("vista", (tipo) => {
+  if (tipo === "ADMIN") {
+    esAdmin = true;
+    document.getElementById("admin-panel").style.display = "block";
+    document.getElementById("adminBtn").style.display = "block";
   }
-  mostrar('espera');
+
+  mostrarPantalla("waiting");
 });
 
-socket.on('contador', n => {
-  document.getElementById('count').innerText = n;
+/* =========================
+   CONTADOR DE JUGADORES
+========================= */
+socket.on("contador", (n) => {
+  const c = document.getElementById("count");
+  if (c) c.innerText = n;
 });
 
-socket.on('rol', data => {
-  mostrar('rol');
-  if (data.tipo === 'IMPOSTOR') {
-    document.getElementById('rolTexto').innerText = "ERES EL IMPOSTOR";
+/* =========================
+   ROL DEL JUGADOR
+========================= */
+socket.on("rol", (data) => {
+  mostrarPantalla("role");
+
+  const title = document.getElementById("roleTitle");
+  const text = document.getElementById("roleText");
+
+  if (data.tipo === "IMPOSTOR") {
+    title.innerText = "ERES EL IMPOSTOR";
+    text.innerText = "Descubre la palabra secreta";
   } else {
-    document.getElementById('rolTexto').innerText = data.palabra;
+    title.innerText = "TU PALABRA ES:";
+    text.innerText = data.palabra;
   }
 });
 
-socket.on('turno', data => {
-  mostrar('turno');
-  document.getElementById('habla').innerText = data.nombre;
-  document.getElementById('btnFin').style.display =
-    socket.id === data.id ? 'block' : 'none';
+/* =========================
+   TURNOS DE HABLA
+========================= */
+socket.on("turno", (data) => {
+  mostrarPantalla("turnScreen");
+
+  document.getElementById("currentSpeakerName").innerText = data.nombre;
+
+  const btn = document.getElementById("btnFinalizarTurno");
+  if (btn) {
+    btn.style.display = socket.id === data.id ? "block" : "none";
+  }
 });
 
-socket.on('faseVotacion', jugadores => {
-  mostrar('votar');
-  const c = document.getElementById('lista');
-  c.innerHTML = '';
-  jugadores.forEach(j => {
+/* =========================
+   FASE DE VOTACIÓN
+========================= */
+socket.on("faseVotacion", (jugadores) => {
+  mostrarPantalla("end");
+
+  const lista = document.getElementById("lista-votacion");
+  lista.innerHTML = "";
+
+  if (esAdmin) {
+    lista.innerText = "Votación en curso...";
+    return;
+  }
+
+  jugadores.forEach((j) => {
     if (j.id !== socket.id) {
-      const b = document.createElement('button');
+      const b = document.createElement("button");
+      b.className = "btn-big";
+      b.style.background = "#333";
+      b.style.color = "white";
       b.innerText = j.nombre;
-      b.onclick = () => socket.emit('votar', j.id);
-      c.appendChild(b);
+
+      b.onclick = () => {
+        socket.emit("votar", j.id);
+        lista.innerHTML = "Voto enviado";
+      };
+
+      lista.appendChild(b);
     }
   });
 });
 
-function mostrar(id) {
-  document.querySelectorAll('.pantalla').forEach(p => p.style.display = 'none');
-  document.getElementById(id).style.display = 'block';
+/* =========================
+   CAMBIO DE PANTALLAS
+========================= */
+function mostrarPantalla(id) {
+  document.querySelectorAll(".screen").forEach((s) => {
+    s.classList.remove("active");
+  });
+
+  const t = document.getElementById(id);
+  if (t) t.classList.add("active");
 }
 
 
