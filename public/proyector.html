@@ -7,79 +7,24 @@
     <style>
         body { margin: 0; background: #000; color: white; font-family: sans-serif; text-align: center; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
         #header { background: #00e676; color: black; padding: 20px; font-size: 3rem; font-weight: bold; }
-        #main-info { font-size: 8rem; margin: 40px 0; }
-        #grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; padding: 20px; }
-        .card { background: #111; border: 3px solid #333; border-radius: 15px; padding: 20px; min-width: 200px; }
-        .card-active { border-color: #00e676; background: #002211; transform: scale(1.1); }
-        .v-count { font-size: 5rem; color: #00e676; font-weight: 900; display: none; }
-        #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; display: none; flex-direction: column; align-items: center; justify-content: center; }
+        #main-val { font-size: 7rem; margin: 40px 0; text-transform: uppercase; }
+        #vote-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; }
+        .v-card { background: #111; border: 3px solid #333; padding: 20px; border-radius: 15px; min-width: 200px; }
+        .v-count { font-size: 4rem; color: #00e676; font-weight: bold; }
+        #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
     </style>
 </head>
 <body>
-    <div id="header">ESPERANDO INICIO...</div>
-    <div id="main-info">IMPOSTOR</div>
-    <div id="grid"></div>
+    <div id="header">ESTADO</div>
+    <div id="main-val">ESPERANDO QUE INICIE EL JUEGO</div>
+    <div id="vote-grid"></div>
+
     <div id="overlay">
-        <h1 id="o-t" style="font-size: 8rem;"></h1>
-        <h2 id="o-s" style="font-size: 4rem;"></h2>
-        <h1 id="o-p" style="font-size: 5rem; color: #ff9800;"></h1>
+        <h1 id="o-titulo" style="font-size: 7rem;"></h1>
+        <h2 id="o-sub" style="font-size: 3rem;"></h2>
+        <h1 id="o-palabra" style="font-size: 4rem; color: #ff9800;"></h1>
     </div>
 
-    <script>
-        const socket = io();
-        socket.emit('unirse', { nombre: 'proyector' });
-
-        socket.on('listaInicialProyeccion', (jugadores) => { render(jugadores, {}); });
-        
-        socket.on('pantallaEstado', (estado) => {
-            if (estado === 'JUEGO_INICIADO') {
-                document.getElementById('overlay').style.display = 'none';
-                document.getElementById('header').innerText = "ATENCIÓN";
-                document.getElementById('main-info').innerText = "LEAN SU FRASE";
-            }
-            if (estado === 'VOTACION_ABIERTA') {
-                document.getElementById('header').innerText = "SISTEMA DE VOTACIÓN";
-                document.querySelectorAll('.v-count').forEach(e => e.style.display = 'block');
-            }
-        });
-
-        socket.on('turnoEnPantalla', (data) => {
-            document.getElementById('header').innerText = "HABLANDO:";
-            document.getElementById('main-info').innerText = data.nombre;
-            const cards = document.querySelectorAll('.card');
-            cards.forEach(c => c.classList.remove('card-active'));
-            const act = document.getElementById('c-'+data.idSocket);
-            if(act) act.classList.add('card-active');
-        });
-
-        socket.on('actualizarVotosProyeccion', (votos) => {
-            for(let id in votos) {
-                const el = document.getElementById('v-'+id);
-                if(el) el.innerText = votos[id];
-            }
-        });
-
-        socket.on('resultadoFinalProyeccion', (data) => {
-            const o = document.getElementById('overlay');
-            o.style.display = 'flex';
-            document.getElementById('o-t').innerText = data.titulo;
-            document.getElementById('o-t').style.color = data.color;
-            document.getElementById('o-s').innerText = data.sub;
-            document.getElementById('o-p').innerText = data.palabra ? "FRRASE: " + data.palabra : "";
-            if(data.temporal) setTimeout(()=> { o.style.display='none'; }, 8000);
-        });
-
-        function render(jugadores, votos) {
-            const g = document.getElementById('grid');
-            g.innerHTML = "";
-            jugadores.forEach(j => {
-                const d = document.createElement('div');
-                d.id = 'c-'+j.id;
-                d.className = 'card' + (j.eliminado ? ' eliminated' : '');
-                d.innerHTML = `<div style="font-size:2rem">${j.nombre}</div><div class="v-count" id="v-${j.id}">${votos[j.id]||0}</div>`;
-                g.appendChild(d);
-            });
-        }
-    </script>
+    <script src="proyector.js"></script>
 </body>
 </html>
