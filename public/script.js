@@ -6,6 +6,7 @@ socket.on('vistas', (tipo) => {
         window.location.href = "proyector.html";
     } else if (tipo === 'ADMIN') {
         esAdmin = true;
+        document.body.classList.add("is-admin"); // Marca el cuerpo como admin
         document.getElementById("admin-panel").style.display = "block";
         document.getElementById("adminBtn").style.display = "block";
         showScreen("waiting");
@@ -27,22 +28,24 @@ socket.on('infoSecretaAdmin', (data) => {
 });
 
 socket.on('recibirRol', (data) => {
+    // CAMBIO PARA LA IGLESIA
     if (data.rol === "IMPOSTOR") {
         document.getElementById("roleTitle").innerText = "ERES EL IMPOSTOR";
-        document.getElementById("roleText").innerText = "Tu misión: descubre la palabra secreta";
+        document.getElementById("roleText").innerText = "Descubre la frase secreta de los demás";
     } else {
         document.getElementById("roleTitle").innerText = "TU FRASE ES:";
         document.getElementById("roleText").innerText = data.palabra;
     }
+    
     showScreen("role");
     
-    // Solo Anderson ve el botón para pasar a los turnos
+    // FORZAR BOTÓN DE DEBATE
     if (esAdmin) {
         document.getElementById("startDebateBtn").style.display = "block";
     }
 });
 
-// FUNCIÓN PARA QUE ANDERSON INICIE LOS TURNOS
+// Función que llama el botón de Debate
 function iniciarDebate() {
     socket.emit('empezarDebateOficial');
 }
@@ -59,14 +62,15 @@ socket.on('cambioDeTurno', (data) => {
     });
     document.getElementById("currentSpeakerName").innerText = data.nombre;
     
-    // El botón de terminar turno SOLO aparece si es MI turno
+    // El botón de pasar turno solo le sale al que tiene el turno
     document.getElementById("btnFinalizarTurno").style.display = (socket.id === data.idSocket) ? "block" : "none";
 });
 
 socket.on('faseVotacion', (vivos) => {
     showScreen("end");
     const lista = document.getElementById("lista-votacion");
-    lista.innerHTML = esAdmin ? "<h3 style='color:#00e676'>Votación en curso...</h3>" : "";
+    lista.innerHTML = esAdmin ? "<p style='color:#00e676'>Votación en curso... Mira la pantalla grande</p>" : "";
+    
     if (!esAdmin) {
         vivos.forEach(j => {
             if(j.id !== socket.id) {
@@ -89,8 +93,6 @@ socket.on('resultadoVotacion', (res) => {
     if (res.terminar) {
         document.getElementById("texto-palabra").innerText = "La frase era: " + res.palabraReal;
         if (esAdmin) document.getElementById("btnNext").style.display = "block";
-    } else {
-        document.getElementById("texto-palabra").innerText = "Nadie ha sido atrapado aún...";
     }
 });
 
