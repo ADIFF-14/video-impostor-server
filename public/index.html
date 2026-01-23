@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>IMPOSTOR - IGLESIA</title>
+
+  <!-- Socket.IO -->
   <script src="/socket.io/socket.io.js"></script>
 
   <style>
@@ -13,9 +15,8 @@
       color: white;
       font-family: sans-serif;
       display: flex;
-      flex-direction: column;
-      align-items: center;
       justify-content: center;
+      align-items: center;
       height: 100vh;
     }
 
@@ -65,7 +66,7 @@
       width: 100%;
       background: #1a1a1a;
       border-bottom: 2px solid #00e676;
-      padding: 15px;
+      padding: 12px;
       display: none;
       z-index: 100;
       text-align: center;
@@ -77,17 +78,12 @@
 
   <!-- PANEL ADMIN -->
   <div id="admin-panel">
-    <div style="color:#00e676; margin-bottom:10px;">
-      🕵️ ADMINISTRADOR
-    </div>
-
-    <button id="adminBtn" class="btn-big"
-      onclick="socket.emit('iniciarPartida')">
+    <button class="btn-big" onclick="iniciarPartida()">
       🚀 REPARTIR FRASES
     </button>
 
-    <button class="btn-big" style="background:#ff9800; margin-top:10px;"
-      onclick="socket.emit('iniciarDebate')">
+    <button class="btn-big" style="background:#ff9800;"
+      onclick="iniciarDebate()">
       🎙️ INICIAR DEBATE
     </button>
   </div>
@@ -96,7 +92,7 @@
 
     <!-- BIENVENIDA -->
     <section id="welcome" class="screen active">
-      <h1 style="color:#00e676; font-size:3rem;">IMPOSTOR</h1>
+      <h1 style="color:#00e676;">IMPOSTOR</h1>
       <input type="text" id="userName" class="big-input" placeholder="Tu Nombre">
       <button class="btn-big" onclick="entrarJuego()">ENTRAR</button>
     </section>
@@ -104,7 +100,7 @@
     <!-- ESPERA -->
     <section id="waiting" class="screen">
       <h2>SALA DE ESPERA</h2>
-      <p>Jugadores conectados: <span id="count">0</span></p>
+      <p>Conectados: <span id="count">0</span></p>
     </section>
 
     <!-- ROL -->
@@ -118,8 +114,7 @@
       <h2>HABLANDO:</h2>
       <h1 id="currentSpeakerName" style="color:#00e676;"></h1>
       <button id="btnFinalizarTurno" class="btn-big"
-        onclick="socket.emit('terminarTurno')"
-        style="display:none;">
+        onclick="terminarTurno()" style="display:none;">
         TERMINAR TURNO
       </button>
     </section>
@@ -132,6 +127,7 @@
 
   </div>
 
+  <!-- JS AL FINAL (CLAVE) -->
   <script src="script.js"></script>
 </body>
 </html>
