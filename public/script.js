@@ -18,7 +18,7 @@ function entrarJuego() {
 socket.on('infoSecretaAdmin', (data) => {
     if (esAdmin) {
         const imp = data.jugadores.find(j => j.rol === "IMPOSTOR");
-        document.getElementById("admin-info").innerText = `IMP: ${imp.nombre} | FRASE: ${data.palabra}`;
+        document.getElementById("admin-info").innerText = `IMP: ${imp.nombre} | PALABRA: ${data.palabra}`;
         document.getElementById("btn-debate-fijo").style.display = "block";
         document.getElementById("btn-forzar-turno").style.display = "none";
         document.getElementById("btn-reiniciar").style.display = "none";
@@ -50,7 +50,7 @@ socket.on('faseVotacion', (vivos) => {
         vivos.forEach(j => {
             if (j.id !== socket.id) {
                 const b = document.createElement("button");
-                b.className = "btn-big"; b.style.background = "#333"; b.innerText = j.nombre;
+                b.className = "btn-voto"; b.innerText = j.nombre;
                 b.onclick = () => { socket.emit('votarJugador', j.id); lista.innerHTML = "Voto enviado"; };
                 lista.appendChild(b);
             }
@@ -65,7 +65,7 @@ socket.on('resultadoVotacion', (res) => {
         document.getElementById("texto-palabra").innerText = "FRASE: " + res.palabraReal;
         if (esAdmin) document.getElementById("btn-reiniciar").style.display = "block";
     } else {
-        document.getElementById("texto-palabra").innerText = "Siguiente ronda en 8s...";
+        document.getElementById("texto-palabra").innerText = "Siguiente ronda pronto...";
     }
 });
 
