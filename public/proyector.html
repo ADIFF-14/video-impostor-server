@@ -1,102 +1,84 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
     <meta charset="UTF-8">
-    <title>SISTEMA DE PROYECCIÓN - IGLESIA</title>
+    <title>PROYECTOR</title>
     <script src="/socket.io/socket.io.js"></script>
     <style>
-        body { margin: 0; background: #000; color: white; font-family: 'Arial Black', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; overflow: hidden; }
-        #header-status { background: #00e676; color: black; padding: 15px; font-size: 3rem; width: 100%; position: fixed; top: 0; text-transform: uppercase; }
-        #main-info { font-size: 8rem; margin-top: 50px; text-shadow: 0 0 40px rgba(255,255,255,0.2); }
-        #player-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; width: 90%; margin-top: 60px; }
-        .card { background: #111; border: 4px solid #333; border-radius: 20px; padding: 25px; min-width: 200px; transition: 0.3s; }
-        .card-active { border-color: #00e676; background: #002211; transform: scale(1.1); box-shadow: 0 0 50px #00e676; }
-        .card-name { font-size: 2rem; margin-bottom: 10px; }
-        .card-votes { font-size: 5rem; color: #00e676; font-weight: 900; display: none; }
-        .eliminated { opacity: 0.1; text-decoration: line-through; }
-        #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
+        body { margin: 0; background: #000; color: white; font-family: sans-serif; text-align: center; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+        #header { background: #00e676; color: black; padding: 20px; font-size: 3rem; font-weight: bold; }
+        #main-info { font-size: 8rem; margin: 40px 0; }
+        #grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; padding: 20px; }
+        .card { background: #111; border: 3px solid #333; border-radius: 15px; padding: 20px; min-width: 200px; }
+        .card-active { border-color: #00e676; background: #002211; transform: scale(1.1); }
+        .v-count { font-size: 5rem; color: #00e676; font-weight: 900; display: none; }
+        #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; display: none; flex-direction: column; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
-    <div id="header-status">ESPERANDO HERMANOS</div>
+    <div id="header">ESPERANDO INICIO...</div>
     <div id="main-info">IMPOSTOR</div>
-    <div id="player-grid"></div>
-
+    <div id="grid"></div>
     <div id="overlay">
-        <h1 id="o-title" style="font-size: 8rem;"></h1>
-        <h2 id="o-sub" style="font-size: 4rem; opacity: 0.8;"></h2>
-        <h1 id="o-word" style="font-size: 5rem; color: #ff9800; margin-top: 50px;"></h1>
+        <h1 id="o-t" style="font-size: 8rem;"></h1>
+        <h2 id="o-s" style="font-size: 4rem;"></h2>
+        <h1 id="o-p" style="font-size: 5rem; color: #ff9800;"></h1>
     </div>
 
     <script>
         const socket = io();
         socket.emit('unirse', { nombre: 'proyector' });
 
-        socket.on('listaInicialProyeccion', (jugadores) => {
-            updateUI(jugadores);
-        });
-
+        socket.on('listaInicialProyeccion', (jugadores) => { render(jugadores, {}); });
+        
         socket.on('pantallaEstado', (estado) => {
-            const h = document.getElementById('header-status');
-            const m = document.getElementById('main-info');
-            const o = document.getElementById('overlay');
             if (estado === 'JUEGO_INICIADO') {
-                o.style.display = 'none';
-                h.innerText = "ATENCIÓN";
-                m.innerText = "LEAN SU FRASE";
+                document.getElementById('overlay').style.display = 'none';
+                document.getElementById('header').innerText = "ATENCIÓN";
+                document.getElementById('main-info').innerText = "LEAN SU FRASE";
             }
             if (estado === 'VOTACION_ABIERTA') {
-                h.innerText = "SISTEMA DE";
-                m.innerText = "VOTACIÓN";
-                m.style.color = "#ff9800";
-                // Mostrar los contadores de votos
-                document.querySelectorAll('.card-votes').forEach(el => el.style.display = "block");
+                document.getElementById('header').innerText = "SISTEMA DE VOTACIÓN";
+                document.querySelectorAll('.v-count').forEach(e => e.style.display = 'block');
             }
         });
 
         socket.on('turnoEnPantalla', (data) => {
-            document.getElementById('overlay').style.display = 'none';
-            document.getElementById('header-status').innerText = "HABLANDO:";
+            document.getElementById('header').innerText = "HABLANDO:";
             document.getElementById('main-info').innerText = data.nombre;
-            updateUI([], data.id); // Resalta al que habla
+            const cards = document.querySelectorAll('.card');
+            cards.forEach(c => c.classList.remove('card-active'));
+            const act = document.getElementById('c-'+data.idSocket);
+            if(act) act.classList.add('card-active');
         });
 
         socket.on('actualizarVotosProyeccion', (votos) => {
-            Object.keys(votos).forEach(id => {
-                const el = document.getElementById(`v-${id}`);
-                if (el) el.innerText = votos[id];
-            });
+            for(let id in votos) {
+                const el = document.getElementById('v-'+id);
+                if(el) el.innerText = votos[id];
+            }
         });
 
         socket.on('resultadoFinalProyeccion', (data) => {
             const o = document.getElementById('overlay');
             o.style.display = 'flex';
-            document.getElementById('o-title').innerText = data.titulo;
-            document.getElementById('o-title').style.color = data.color;
-            document.getElementById('o-sub').innerText = data.sub;
-            document.getElementById('o-word').innerText = data.palabra ? "FRRASE: " + data.palabra : "";
-            if (data.temporal) setTimeout(() => { o.style.display = 'none'; }, 8000);
+            document.getElementById('o-t').innerText = data.titulo;
+            document.getElementById('o-t').style.color = data.color;
+            document.getElementById('o-s').innerText = data.sub;
+            document.getElementById('o-p').innerText = data.palabra ? "FRRASE: " + data.palabra : "";
+            if(data.temporal) setTimeout(()=> { o.style.display='none'; }, 8000);
         });
 
-        function updateUI(jugadores, activeId) {
-            const grid = document.getElementById('player-grid');
-            if (jugadores.length > 0) grid.innerHTML = "";
-            
-            // Si recibimos jugadores, dibujamos los cuadros
-            if (jugadores.length > 0) {
-                jugadores.forEach(j => {
-                    const div = document.createElement('div');
-                    div.id = `card-${j.id}`;
-                    div.className = `card ${j.eliminado ? 'eliminated' : ''}`;
-                    div.innerHTML = `<div class="card-name">${j.nombre}</div><div class="card-votes" id="v-${j.id}">0</div>`;
-                    grid.appendChild(div);
-                });
-            }
-
-            // Resaltar al activo
-            document.querySelectorAll('.card').forEach(c => c.classList.remove('card-active'));
-            const active = document.getElementById(`card-${activeId}`);
-            if (active) active.classList.add('card-active');
+        function render(jugadores, votos) {
+            const g = document.getElementById('grid');
+            g.innerHTML = "";
+            jugadores.forEach(j => {
+                const d = document.createElement('div');
+                d.id = 'c-'+j.id;
+                d.className = 'card' + (j.eliminado ? ' eliminated' : '');
+                d.innerHTML = `<div style="font-size:2rem">${j.nombre}</div><div class="v-count" id="v-${j.id}">${votos[j.id]||0}</div>`;
+                g.appendChild(d);
+            });
         }
     </script>
 </body>
