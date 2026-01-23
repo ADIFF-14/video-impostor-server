@@ -1,41 +1,85 @@
 const socket = io();
 socket.emit("unirse", { nombre: "proyector" });
 
-const grid = document.getElementById("grid");
-const main = document.getElementById("main");
-const overlay = document.getElementById("overlay");
-const texto = document.getElementById("resultado");
+let jugadores = [];
 
-socket.on("listaJugadores", jugadores => {
-  grid.innerHTML = "";
-  jugadores.forEach(j => {
-    const d = document.createElement("div");
-    d.id = j.id;
-    d.className = "card";
-    d.innerHTML = `<h2>${j.nombre}</h2><h1 id="v-${j.id}">0</h1>`;
-    grid.appendChild(d);
-  });
+/* =========================
+   LISTA DE JUGADORES
+========================= */
+socket.on("listaInicialProyeccion", (lista) => {
+  jugadores = lista;
+  renderGrid({});
 });
 
-socket.on("turnoPantalla", nombre => {
-  main.innerText = nombre;
-});
+/* =========================
+   ESTADOS DE PANTALLA
+========================= */
+socket.on("pantallaEstado", (estado) => {
+  if (estado === "JUEGO_INICIADO") {
+    document.getElementById("header").innerText = "ATENCIÓN";
+    document.getElementById("main").innerText = "LEAN SU FRASE";
+    document.getElementById("grid").innerHTML = "";
+  }
 
-socket.on("conteoVotos", votos => {
-  for (let id in votos) {
-    const el = document.getElementById("v-" + id);
-    if (el) el.innerText = votos[id];
+  if (estado === "VOTACION_ABIERTA") {
+    document.getElementById("header").innerText = "VOTACIÓN";
+    document.getElementById("main").innerText = "ELIJA AL IMPOSTOR";
+    renderGrid({});
   }
 });
 
-socket.on("resultado", data => {
+/* =========================
+   TURNO DE HABLA
+========================= */
+socket.on("turnoEnPantalla", (nombre) => {
+  document.getElementById("header").innerText = "TURNO DE";
+  document.getElementById("main").innerText = nombre;
+});
+
+/* =========================
+   ACTUALIZAR VOTOS
+========================= */
+socket.on("actualizarVotosProyeccion", (votos) => {
+  renderGrid(votos);
+});
+
+/* =========================
+   RESULTADO FINAL
+========================= */
+socket.on("resultadoFinalProyeccion", (data) => {
+  const overlay = document.getElementById("overlay");
   overlay.style.display = "flex";
 
   if (data.esImpostor) {
-    texto.innerText = `🔥 TE ATRAPAMOS 🔥\n${data.nombre}\nERAS EL IMPOSTOR`;
+    document.getElementById("final-title").innerText = "🔥 TE ATRAPAMOS 🔥";
+    document.getElementById("final-sub").innerText =
+      `${data.expulsado} ERA EL IMPOSTOR`;
   } else {
-    texto.innerText = `✅ INOCENTE\n${data.nombre}\nNO ERAS EL IMPOSTOR`;
+    document.getElementById("final-title").innerText = "✅ INOCENTE";
+    document.getElementById("final-sub").innerText =
+      `${data.expulsado} NO ERA EL IMPOSTOR`;
   }
 });
+
+/* =========================
+   RENDER GRID
+========================= */
+function renderGrid(votos) {
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+
+  jugadores.forEach((j) => {
+    if (!j.eliminado) {
+      const div = document.createElement("div");
+      div.className = "card";
+      div.innerHTML = `
+        <div class="name">${j.nombre}</div>
+        <div class="votes">${votos[j.id] || 0}</div>
+      `;
+      grid.appendChild(div);
+    }
+  });
+}
+
 
 
