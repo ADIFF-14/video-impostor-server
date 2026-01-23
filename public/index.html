@@ -8,7 +8,7 @@
 </head>
 <body>
 <div id="app">
-    <div id="admin-panel" style="display:none; background:#1a1a1a; padding:15px; border-bottom:3px solid #00e676; font-weight:bold;">
+    <div id="admin-panel" style="display:none; background:#1a1a1a; padding:15px; border-bottom:3px solid #00e676; font-weight:bold; position: sticky; top: 0; z-index: 999;">
         🕵️ INFO ADMIN: <span id="admin-info" style="color:#00e676"></span>
     </div>
 
@@ -27,7 +27,7 @@
     <section id="role" class="screen">
         <h2 id="roleTitle" style="opacity:0.6; font-size:18px;"></h2>
         <h1 id="roleText" style="color:#00e676; font-size:40px; margin:20px 0;"></h1>
-        <p style="font-size:14px; opacity:0.5;">Atento a Anderson</p>
+        <p style="font-size:14px; opacity:0.5;">Atento a las instrucciones de Anderson</p>
         <button id="startDebateBtn" style="display:none; background:#e67e22; color:white;" class="btn-big" onclick="iniciarDebate()">EMPEZAR DEBATE</button>
     </section>
 
@@ -46,7 +46,7 @@
     </section>
 
     <section id="result" class="screen">
-        <h1 id="texto-res" style="white-space: pre-wrap;"></h1>
+        <h1 id="texto-res" style="white-space: pre-wrap; font-size: 18px;"></h1>
         <h2 id="texto-palabra"></h2>
         <button id="btnNext" style="display:none" class="btn-big" onclick="socket.emit('iniciarRonda')">🔄 NUEVA PARTIDA</button>
     </section>
