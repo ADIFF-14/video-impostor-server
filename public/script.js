@@ -1,121 +1,76 @@
 const socket = io();
 let esAdmin = false;
 
-/* =========================
-   ENTRAR AL JUEGO
-========================= */
+/* ENTRAR */
 function entrarJuego() {
-  const input = document.getElementById("userName");
-  if (!input) {
-    alert("No se encontró el campo de nombre");
-    return;
-  }
-
-  const nombre = input.value.trim();
-  if (nombre === "") {
-    alert("Escribe tu nombre");
-    return;
-  }
-
+  const nombre = document.getElementById("userName").value.trim();
+  if (!nombre) return alert("Escribe tu nombre");
   socket.emit("unirse", { nombre });
 }
 
-/* =========================
-   VISTA SEGÚN ROL
-========================= */
+/* VISTA */
 socket.on("vista", (tipo) => {
   if (tipo === "ADMIN") {
     esAdmin = true;
     document.getElementById("admin-panel").style.display = "block";
-    document.getElementById("adminBtn").style.display = "block";
   }
-
-  mostrarPantalla("waiting");
+  mostrar("waiting");
 });
 
-/* =========================
-   CONTADOR DE JUGADORES
-========================= */
+/* CONTADOR */
 socket.on("contador", (n) => {
-  const c = document.getElementById("count");
-  if (c) c.innerText = n;
+  document.getElementById("count").innerText = n;
 });
 
-/* =========================
-   ROL DEL JUGADOR
-========================= */
+/* ROL */
 socket.on("rol", (data) => {
-  mostrarPantalla("role");
-
-  const title = document.getElementById("roleTitle");
-  const text = document.getElementById("roleText");
-
+  mostrar("role");
   if (data.tipo === "IMPOSTOR") {
-    title.innerText = "ERES EL IMPOSTOR";
-    text.innerText = "Descubre la palabra secreta";
+    roleTitle.innerText = "ERES EL IMPOSTOR";
+    roleText.innerText = "Descubre la palabra";
   } else {
-    title.innerText = "TU PALABRA ES:";
-    text.innerText = data.palabra;
+    roleTitle.innerText = "TU PALABRA ES:";
+    roleText.innerText = data.palabra;
   }
 });
 
-/* =========================
-   TURNOS DE HABLA
-========================= */
-socket.on("turno", (data) => {
-  mostrarPantalla("turnScreen");
-
-  document.getElementById("currentSpeakerName").innerText = data.nombre;
-
-  const btn = document.getElementById("btnFinalizarTurno");
-  if (btn) {
-    btn.style.display = socket.id === data.id ? "block" : "none";
-  }
+/* TURNOS */
+socket.on("turno", (d) => {
+  mostrar("turnScreen");
+  currentSpeakerName.innerText = d.nombre;
+  btnFinalizarTurno.style.display =
+    socket.id === d.id ? "block" : "none";
 });
 
-/* =========================
-   FASE DE VOTACIÓN
-========================= */
+/* VOTACIÓN */
 socket.on("faseVotacion", (jugadores) => {
-  mostrarPantalla("end");
+  mostrar("end");
+  lista-votacion.innerHTML = "";
 
-  const lista = document.getElementById("lista-votacion");
-  lista.innerHTML = "";
-
-  if (esAdmin) {
-    lista.innerText = "Votación en curso...";
-    return;
-  }
-
-  jugadores.forEach((j) => {
+  jugadores.forEach(j => {
     if (j.id !== socket.id) {
       const b = document.createElement("button");
       b.className = "btn-big";
       b.style.background = "#333";
       b.style.color = "white";
       b.innerText = j.nombre;
-
       b.onclick = () => {
         socket.emit("votar", j.id);
-        lista.innerHTML = "Voto enviado";
+        lista-votacion.innerHTML = "Voto enviado";
       };
-
-      lista.appendChild(b);
+      lista-votacion.appendChild(b);
     }
   });
 });
 
-/* =========================
-   CAMBIO DE PANTALLAS
-========================= */
-function mostrarPantalla(id) {
-  document.querySelectorAll(".screen").forEach((s) => {
-    s.classList.remove("active");
-  });
-
-  const t = document.getElementById(id);
-  if (t) t.classList.add("active");
+/* CAMBIO DE PANTALLA */
+function mostrar(id) {
+  document.querySelectorAll(".screen")
+    .forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
 }
+
+
 
 
 
