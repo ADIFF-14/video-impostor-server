@@ -1,30 +1,68 @@
+/* =====================
+   SOCKET
+===================== */
 const socket = io();
 let esAdmin = false;
 
-/* ENTRAR */
+/* =====================
+   ENTRAR
+===================== */
 function entrarJuego() {
-  const nombre = document.getElementById("userName").value.trim();
-  if (!nombre) return alert("Escribe tu nombre");
+  const input = document.getElementById("userName");
+
+  if (!input) {
+    alert("Input no encontrado");
+    return;
+  }
+
+  const nombre = input.value.trim();
+  if (nombre === "") {
+    alert("Escribe tu nombre");
+    return;
+  }
+
   socket.emit("unirse", { nombre });
 }
 
-/* VISTA */
+/* =====================
+   ADMIN BOTONES
+===================== */
+function iniciarPartida() {
+  socket.emit("iniciarPartida");
+}
+
+function iniciarDebate() {
+  socket.emit("iniciarDebate");
+}
+
+function terminarTurno() {
+  socket.emit("terminarTurno");
+}
+
+/* =====================
+   VISTA
+===================== */
 socket.on("vista", (tipo) => {
   if (tipo === "ADMIN") {
     esAdmin = true;
     document.getElementById("admin-panel").style.display = "block";
   }
-  mostrar("waiting");
+  mostrarPantalla("waiting");
 });
 
-/* CONTADOR */
+/* =====================
+   CONTADOR
+===================== */
 socket.on("contador", (n) => {
   document.getElementById("count").innerText = n;
 });
 
-/* ROL */
+/* =====================
+   ROL
+===================== */
 socket.on("rol", (data) => {
-  mostrar("role");
+  mostrarPantalla("role");
+
   if (data.tipo === "IMPOSTOR") {
     roleTitle.innerText = "ERES EL IMPOSTOR";
     roleText.innerText = "Descubre la palabra";
@@ -34,18 +72,23 @@ socket.on("rol", (data) => {
   }
 });
 
-/* TURNOS */
+/* =====================
+   TURNOS
+===================== */
 socket.on("turno", (d) => {
-  mostrar("turnScreen");
+  mostrarPantalla("turnScreen");
   currentSpeakerName.innerText = d.nombre;
   btnFinalizarTurno.style.display =
     socket.id === d.id ? "block" : "none";
 });
 
-/* VOTACIÓN */
+/* =====================
+   VOTACIÓN
+===================== */
 socket.on("faseVotacion", (jugadores) => {
-  mostrar("end");
-  lista-votacion.innerHTML = "";
+  mostrarPantalla("end");
+  const lista = document.getElementById("lista-votacion");
+  lista.innerHTML = "";
 
   jugadores.forEach(j => {
     if (j.id !== socket.id) {
@@ -54,23 +97,27 @@ socket.on("faseVotacion", (jugadores) => {
       b.style.background = "#333";
       b.style.color = "white";
       b.innerText = j.nombre;
+
       b.onclick = () => {
         socket.emit("votar", j.id);
-        lista-votacion.innerHTML = "Voto enviado";
+        lista.innerHTML = "Voto enviado";
       };
-      lista-votacion.appendChild(b);
+
+      lista.appendChild(b);
     }
   });
 });
 
-/* CAMBIO DE PANTALLA */
-function mostrar(id) {
+/* =====================
+   PANTALLAS
+===================== */
+function mostrarPantalla(id) {
   document.querySelectorAll(".screen")
     .forEach(s => s.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
+
+  const t = document.getElementById(id);
+  if (t) t.classList.add("active");
 }
-
-
 
 
 
