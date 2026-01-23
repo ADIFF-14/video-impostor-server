@@ -40,7 +40,6 @@ io.on('connection', (socket) => {
             return;
         }
 
-        // Jugador normal
         jugadores.push({ id: socket.id, nombre: datos.nombre, eliminado: false, rol: "" });
         socket.emit('vistas', 'JUGADOR');
         io.emit('actualizarLista', jugadores.length);
@@ -62,11 +61,7 @@ io.on('connection', (socket) => {
             io.to(j.id).emit('recibirRol', info);
         });
 
-        io.to('sala_admin').emit('infoSecretaAdmin', {
-            jugadores: jugadores,
-            palabra: palabraActual
-        });
-
+        io.to('sala_admin').emit('infoSecretaAdmin', { jugadores, palabra: palabraActual });
         io.to('sala_proyeccion').emit('pantallaEstado', 'JUEGO_INICIADO');
         io.to('sala_proyeccion').emit('listaInicialProyeccion', jugadores);
     });
@@ -105,8 +100,7 @@ io.on('connection', (socket) => {
         Object.keys(votosRecibidos).forEach(id => { conteoVotos[id] = votosRecibidos[id].length; });
         io.to('sala_proyeccion').emit('actualizarVotosProyeccion', conteoVotos);
 
-        const vivos = jugadores.filter(j => !j.eliminado).length;
-        if (Object.values(votosRecibidos).flat().length >= vivos) {
+        if (Object.values(votosRecibidos).flat().length >= jugadores.filter(j => !j.eliminado).length) {
             procesarVotacion();
         }
     });
@@ -115,7 +109,7 @@ io.on('connection', (socket) => {
         let resumen = "";
         Object.keys(votosRecibidos).forEach(id => {
             const obj = jugadores.find(j => j.id === id);
-            resumen += `${obj.nombre}: ${votosRecibidos[id].join(", ")}\n`;
+            resumen += `${obj.nombre}: ${votosRecibidos[id].length} votos\n`;
         });
 
         let max = 0, expId = null;
