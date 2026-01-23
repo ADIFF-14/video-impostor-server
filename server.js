@@ -35,12 +35,13 @@ io.on('connection', (socket) => {
         if (nombreBuscado === 'anderson') {
             socket.join('sala_admin');
             socket.emit('vistas', 'ADMIN');
+            socket.emit('actualizarLista', jugadores.length);
             return;
         }
         jugadores.push({ id: socket.id, nombre: datos.nombre, eliminado: false, rol: "" });
         socket.emit('vistas', 'JUGADOR');
         io.emit('actualizarLista', jugadores.length);
-        io.to('sala_proyeccion').emit('listaInicialProyeccion', jugadores);
+        io.to('sala_proyeccion').emit('listaInicialProyeccion', jugadores.filter(j => !j.eliminado));
     });
 
     socket.on('iniciarRonda', () => {
@@ -56,6 +57,7 @@ io.on('connection', (socket) => {
             const info = (j.rol === "IMPOSTOR") ? { rol: "IMPOSTOR" } : { rol: "CIUDADANO", palabra: palabraActual };
             io.to(j.id).emit('recibirRol', info);
         });
+
         io.to('sala_admin').emit('infoSecretaAdmin', { jugadores, palabra: palabraActual });
         io.to('sala_proyeccion').emit('pantallaEstado', 'JUEGO_INICIADO');
         io.to('sala_proyeccion').emit('listaInicialProyeccion', jugadores);
