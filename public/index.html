@@ -21,13 +21,13 @@
         <section id="waiting" class="screen">
             <h2>Sala de Espera</h2>
             <p>Hermanos conectados: <span id="count">0</span></p>
-            <button id="adminBtn" style="display:none" class="btn-big" onclick="socket.emit('iniciarRonda')">🚀 INICIAR JUEGO</button>
+            <button id="btn-iniciar-ronda" style="display:none" class="btn-big" onclick="socket.emit('iniciarRonda')">🚀 INICIAR JUEGO</button>
         </section>
 
         <section id="role" class="screen">
             <h2 id="roleTitle"></h2>
             <h1 id="roleText" style="color:#00e676; font-size:40px; margin:20px 0;"></h1>
-            <button id="startDebateBtn" style="display:none; background:#e67e22; color:white;" class="btn-big" onclick="socket.emit('empezarDebateOficial')">EMPEZAR DEBATE</button>
+            <button id="btn-iniciar-debate" style="display:none; background:#e67e22; color:white;" class="btn-big" onclick="socket.emit('empezarDebateOficial')">EMPEZAR DEBATE</button>
         </section>
 
         <section id="turnScreen" class="screen">
@@ -44,7 +44,7 @@
         <section id="result" class="screen">
             <h1 id="texto-res" style="white-space: pre-wrap;"></h1>
             <h2 id="texto-palabra" style="color:#00e676"></h2>
-            <button id="btnNext" style="display:none" class="btn-big" onclick="socket.emit('iniciarRonda')">🔄 NUEVA PARTIDA</button>
+            <button id="btn-reiniciar" style="display:none" class="btn-big" onclick="socket.emit('iniciarRonda')">🔄 NUEVA PARTIDA</button>
         </section>
     </div>
     <script src="script.js"></script>
