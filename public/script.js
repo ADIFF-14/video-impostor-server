@@ -1,42 +1,37 @@
 const socket = io();
-let miNombre, esAdmin = false;
+let esAdmin = false;
 
 socket.on('vistas', (tipo) => {
     if (tipo === 'PROYECTOR') {
-        window.location.href = "/proyector.html";
+        window.location.href = "proyector.html";
     } else if (tipo === 'ADMIN') {
         esAdmin = true;
+        document.getElementById("admin-panel").style.display = "block";
         document.getElementById("adminBtn").style.display = "block";
+        showScreen("waiting");
+    } else {
         showScreen("waiting");
     }
 });
 
 function entrarJuego() {
-    miNombre = document.getElementById("userName").value.trim();
-    if (!miNombre) return alert("Pon un nombre");
-    socket.emit('unirse', { nombre: miNombre });
-    if (miNombre.toLowerCase() !== 'anderson' && miNombre.toLowerCase() !== 'proyector') {
-        showScreen("waiting");
-    }
+    const n = document.getElementById("userName").value.trim();
+    if (n) socket.emit('unirse', { nombre: n });
 }
 
 socket.on('infoSecretaAdmin', (data) => {
     if (esAdmin) {
         const imp = data.jugadores.find(j => j.rol === "IMPOSTOR");
-        alert(`MODO ADMIN\nImpostor: ${imp.nombre}\nPalabra: ${data.palabra}`);
+        document.getElementById("admin-info").innerText = `IMPOSTOR: ${imp.nombre} | PALABRA: ${data.palabra}`;
     }
 });
 
 socket.on('recibirRol', (data) => {
-    document.getElementById("roleTitle").innerText = (data.rol === "IMPOSTOR") ? "ERES EL IMPOSTOR" : "TU FRASE ES:";
-    document.getElementById("roleText").innerText = (data.rol === "IMPOSTOR") ? "Miente para sobrevivir" : data.palabra;
+    document.getElementById("roleTitle").innerText = (data.rol === "IMPOSTOR") ? "ERES EL IMPOSTOR" : "TU PALABRA:";
+    document.getElementById("roleText").innerText = (data.rol === "IMPOSTOR") ? "Miente" : data.palabra;
     showScreen("role");
     if (esAdmin) document.getElementById("startDebateBtn").style.display = "block";
 });
-
-function irALosTurnos() {
-    if(esAdmin) socket.emit('empezarDebateOficial');
-}
 
 socket.on('cambioDeTurno', (data) => {
     showScreen("turnScreen");
@@ -55,14 +50,14 @@ socket.on('cambioDeTurno', (data) => {
 socket.on('faseVotacion', (vivos) => {
     showScreen("end");
     const lista = document.getElementById("lista-votacion");
-    lista.innerHTML = esAdmin ? "<h3>Votación en curso...</h3>" : "";
+    lista.innerHTML = esAdmin ? "Esperando votos..." : "";
     if (!esAdmin) {
         vivos.forEach(j => {
             if(j.id !== socket.id) {
                 const b = document.createElement("button");
                 b.className = "btn-voto";
                 b.innerText = j.nombre;
-                b.onclick = () => { socket.emit('votarJugador', j.id); lista.innerHTML = "<p>Voto enviado</p>"; };
+                b.onclick = () => { socket.emit('votarJugador', j.id); lista.innerHTML = "Voto enviado"; };
                 lista.appendChild(b);
             }
         });
@@ -84,6 +79,7 @@ function showScreen(id) {
 }
 
 socket.on('actualizarLista', (n) => { document.getElementById("count").innerText = n; });
+
 
 
 
