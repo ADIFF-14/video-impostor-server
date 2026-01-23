@@ -8,45 +8,43 @@
 </head>
 <body>
 <div id="app">
+    <div id="admin-panel" style="display:none; background:#222; padding:10px; font-size:12px; border-bottom:2px solid #00e676;">
+        INFO: <span id="admin-info">Esperando...</span>
+    </div>
+
     <section id="welcome" class="screen active">
         <h1 class="main-title">IMPOSTOR</h1>
-        <p class="welcome-msg">¡Hola! Soy Anderson y te doy la bienvenida.</p>
-        <p style="margin-bottom:30px; font-style:italic; opacity:0.6;">Hay un impostor suelto entre nosotros... ¿Serás capaz de descubrirlo?</p>
         <input type="text" id="userName" class="big-input" placeholder="Tu Nombre">
         <button class="btn-big" onclick="entrarJuego()">ENTRAR</button>
     </section>
 
     <section id="waiting" class="screen">
         <h2>Sala de Espera</h2>
-        <p>Jugadores en sala: <span id="count">0</span></p>
-        <button id="adminBtn" style="display:none" class="btn-big" onclick="socket.emit('iniciarRonda')">🚀 INICIAR PARTIDA</button>
+        <p>Jugadores: <span id="count">0</span></p>
+        <button id="adminBtn" style="display:none" class="btn-big" onclick="socket.emit('iniciarRonda')">🚀 INICIAR</button>
     </section>
 
     <section id="role" class="screen">
-        <h2 id="roleTitle" style="opacity:0.6; font-size:18px;"></h2>
-        <h1 id="roleText" style="color:#00e676; font-size:48px; margin:20px 0; background:#000; padding:20px; border-radius:20px;"></h1>
-        <p style="font-size:14px; opacity:0.5;">Espera a que Anderson inicie el debate...</p>
-        <button id="startDebateBtn" style="display:none; background:#ffeb3b; color:black;" class="btn-big" onclick="irALosTurnos()">INICIAR DEBATE</button>
+        <h2 id="roleTitle"></h2>
+        <h1 id="roleText"></h1>
+        <button id="startDebateBtn" style="display:none" class="btn-big" onclick="socket.emit('empezarDebateOficial')">DEBATE</button>
     </section>
 
     <section id="turnScreen" class="screen">
         <div id="grid-jugadores" class="player-grid"></div>
-        <div style="background:#1a1a1a; padding:30px; border-radius:20px; border:1px solid #333;">
-            <p style="opacity:0.5; margin:0; font-size:14px;">Hablando ahora:</p>
-            <h1 id="currentSpeakerName" style="font-size:38px; margin:10px 0;">---</h1>
-        </div>
-        <button id="btnFinalizarTurno" class="btn-big" style="margin-top:20px;" onclick="socket.emit('finalizarMiTurno')">TERMINAR DE HABLAR</button>
+        <h1 id="currentSpeakerName">---</h1>
+        <button id="btnFinalizarTurno" class="btn-big" style="display:none" onclick="socket.emit('finalizarMiTurno')">PASAR TURNO</button>
     </section>
 
     <section id="end" class="screen">
-        <h2 style="letter-spacing:2px; font-size:18px; margin-bottom:20px; opacity:0.5;">VOTACIÓN</h2>
+        <h2>VOTACIÓN</h2>
         <div id="lista-votacion"></div>
     </section>
 
     <section id="result" class="screen">
-        <h1 id="texto-res" style="color:#00e676; font-size:26px;"></h1>
-        <h2 id="texto-palabra" style="margin:25px 0; font-weight:400; opacity:0.7;"></h2>
-        <button id="btnNext" style="display:none" class="btn-big" onclick="socket.emit('iniciarRonda')">🔄 REINICIAR</button>
+        <h1 id="texto-res"></h1>
+        <h2 id="texto-palabra"></h2>
+        <button id="btnNext" style="display:none" class="btn-big" onclick="socket.emit('iniciarRonda')">REINICIAR</button>
     </section>
 </div>
 <script src="script.js"></script>
