@@ -11,7 +11,7 @@ let jugadores = [];
 let ordenHablar = [];
 let indiceTurno = 0;
 let palabraActual = "";
-let votosRecibidos = {};
+let votosRecibidos = {}; // Ahora guardará { idVotado: [NombreVotante1, NombreVotante2] }
 let rondaActual = 1;
 
 const palabras = ["Pizza", "Avión", "WhatsApp", "Netflix", "Fútbol", "Cine", "Playa", "Gato", "Reloj", "Bicicleta", "Hamburguesa", "Internet", "Instagram", "Parque", "Café", "Escuela", "Navidad", "Música", "Helado", "Libro", "Carro", "Perro", "Sol", "Trabajo", "Viaje", "Tacos", "Guitarra", "Hospital", "Cámara", "Luna", "Dinero", "Piscina", "Televisión", "Dormir", "Bailar", "Fruta", "Chocolate", "YouTube", "Teléfono", "Estudiar", "Policía", "Bombero", "Estadio", "Cerveza", "Sushi", "Zapato", "Verano", "Maleta", "Videojuego"];
@@ -26,10 +26,8 @@ function mezclar(array) {
 
 io.on('connection', (socket) => {
     socket.on('unirse', (datos) => {
-        // Eliminado peerId de los datos del jugador
         jugadores.push({ id: socket.id, nombre: datos.nombre, eliminado: false, rol: "" });
         io.emit('actualizarLista', jugadores.length);
-        // Eliminado evento listaParaAudio
     });
 
     socket.on('iniciarRonda', () => {
@@ -49,7 +47,16 @@ io.on('connection', (socket) => {
     socket.on('empezarDebateOficial', () => {
         indiceTurno = 0;
         votosRecibidos = {};
-        ordenHablar = mezclar(jugadores.filter(j => !j.eliminado));
+        let vivos = jugadores.filter(j => !j.eliminado);
+        let listaMezclada = mezclar([...vivos]);
+        
+        if (listaMezclada.length > 1 && listaMezclada[0].rol === "IMPOSTOR") {
+            const impostor = listaMezclada.shift();
+            const nuevaPos = Math.floor(Math.random() * listaMezclada.length) + 1;
+            listaMezclada.splice(nuevaPos, 0, impostor);
+        }
+        
+        ordenHablar = listaMezclada;
         notificarTurno();
     });
 
@@ -60,31 +67,42 @@ io.on('connection', (socket) => {
 
     function notificarTurno() {
         if (indiceTurno < ordenHablar.length) {
-            io.emit('cambioDeTurno', { 
-                nombre: ordenHablar[indiceTurno].nombre, 
-                idSocket: ordenHablar[indiceTurno].id, 
-                lista: jugadores 
-            });
+            io.emit('cambioDeTurno', { nombre: ordenHablar[indiceTurno].nombre, idSocket: ordenHablar[indiceTurno].id, lista: jugadores });
         } else {
             io.emit('faseVotacion', jugadores.filter(j => !j.eliminado));
         }
     }
 
     socket.on('votarJugador', (idVotado) => {
-        votosRecibidos[idVotado] = (votosRecibidos[idVotado] || 0) + 1;
+        const votante = jugadores.find(j => j.id === socket.id);
+        if (!votosRecibidos[idVotado]) votosRecibidos[idVotado] = [];
+        
+        // Guardamos el NOMBRE de quien votó
+        votosRecibidos[idVotado].push(votante.nombre);
+
+        const totalVotos = Object.values(votosRecibidos).reduce((acc, curr) => acc + curr.length, 0);
         const vivos = jugadores.filter(j => !j.eliminado).length;
-        if (Object.values(votosRecibidos).reduce((a, b) => a + b, 0) >= vivos) {
+
+        if (totalVotos >= vivos) {
             procesarVotacion();
         }
     });
 
     function procesarVotacion() {
+        // Crear el resumen de quién votó por quién
+        let resumenDetallado = "";
+        Object.keys(votosRecibidos).forEach(id => {
+            const objetivo = jugadores.find(j => j.id === id);
+            const quienesVotaron = votosRecibidos[id].join(", ");
+            resumenDetallado += `${objetivo.nombre} (${votosRecibidos[id].length} votos): ${quienesVotaron}\n`;
+        });
+
         const idsVotados = Object.keys(votosRecibidos);
         let maxVotos = 0;
         let expulsadoId = null;
         idsVotados.forEach(id => {
-            if (votosRecibidos[id] > maxVotos) {
-                maxVotos = votosRecibidos[id];
+            if (votosRecibidos[id].length > maxVotos) {
+                maxVotos = votosRecibidos[id].length;
                 expulsadoId = id;
             }
         });
@@ -93,23 +111,18 @@ io.on('connection', (socket) => {
         if(!expulsado) return;
         expulsado.eliminado = true;
 
+        let mensajeFinal = "";
         if (expulsado.rol === "IMPOSTOR") {
-            io.emit('resultadoVotacion', { 
-                mensaje: `¡ATRAPADO! ${expulsado.nombre} recibió ${maxVotos} votos y era el IMPOSTOR.`, 
-                terminar: true, palabraReal: palabraActual 
-            });
+            mensajeFinal = `¡TE ATRAPAMOS! ${expulsado.nombre} era el IMPOSTOR.\n\nDETALLE:\n${resumenDetallado}`;
+            io.emit('resultadoVotacion', { mensaje: mensajeFinal, terminar: true, palabraReal: palabraActual });
         } else {
             if (rondaActual < 3) {
                 rondaActual++;
-                io.emit('resultadoVotacion', { 
-                    mensaje: `¡ERROR! ${expulsado.nombre} recibió ${maxVotos} votos pero era INOCENTE.`, 
-                    terminar: false 
-                });
+                mensajeFinal = `¡ERROR! ${expulsado.nombre} era INOCENTE.\n\nDETALLE:\n${resumenDetallado}`;
+                io.emit('resultadoVotacion', { mensaje: mensajeFinal, terminar: false });
             } else {
-                io.emit('resultadoVotacion', { 
-                    mensaje: `¡DERROTA! El impostor ha ganado la partida.`, 
-                    terminar: true, palabraReal: palabraActual 
-                });
+                mensajeFinal = `¡DERROTA! El impostor ganó.\n\nDETALLE:\n${resumenDetallado}`;
+                io.emit('resultadoVotacion', { mensaje: mensajeFinal, terminar: true, palabraReal: palabraActual });
             }
         }
         votosRecibidos = {};
