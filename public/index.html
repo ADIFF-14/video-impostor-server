@@ -2,133 +2,42 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IMPOSTOR - IGLESIA</title>
-
-  <!-- Socket.IO -->
+  <title>IMPOSTOR</title>
   <script src="/socket.io/socket.io.js"></script>
 
   <style>
     body {
-      margin: 0;
       background: #080808;
       color: white;
-      font-family: sans-serif;
+      font-family: Arial, sans-serif;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
+      margin: 0;
     }
-
-    #app {
-      width: 90%;
-      max-width: 400px;
-      text-align: center;
-    }
-
-    .screen {
-      display: none;
-      background: #121212;
-      padding: 25px;
-      border-radius: 20px;
-      border: 1px solid #333;
-    }
-
-    .screen.active {
-      display: block;
-    }
-
-    .btn-big {
-      background: #00e676;
-      color: black;
-      border: none;
-      padding: 16px;
-      width: 100%;
-      font-weight: bold;
-      font-size: 1.1rem;
-      border-radius: 12px;
-      cursor: pointer;
-      margin-top: 15px;
-    }
-
-    .big-input {
-      width: 100%;
-      padding: 16px;
-      font-size: 1.1rem;
-      margin-bottom: 15px;
-      border-radius: 12px;
-      border: none;
-    }
-
-    #admin-panel {
-      position: fixed;
-      top: 0;
-      width: 100%;
-      background: #1a1a1a;
-      border-bottom: 2px solid #00e676;
-      padding: 12px;
-      display: none;
-      z-index: 100;
-      text-align: center;
-    }
+    .screen { display: none; background:#121212; padding:20px; border-radius:15px; }
+    .active { display:block; }
+    button { padding:15px; width:100%; font-size:18px; margin-top:10px; }
+    input { padding:15px; width:100%; font-size:18px; }
   </style>
 </head>
 
 <body>
 
-  <!-- PANEL ADMIN -->
-  <div id="admin-panel">
-    <button class="btn-big" onclick="iniciarPartida()">
-      🚀 REPARTIR FRASES
-    </button>
+<div id="welcome" class="screen active">
+  <h1>IMPOSTOR</h1>
+  <input id="userName" placeholder="Tu nombre">
+  <button onclick="entrar()">ENTRAR</button>
+</div>
 
-    <button class="btn-big" style="background:#ff9800;"
-      onclick="iniciarDebate()">
-      🎙️ INICIAR DEBATE
-    </button>
-  </div>
+<div id="waiting" class="screen">
+  <h2>Esperando jugadores...</h2>
+  <p>Total: <span id="count">0</span></p>
+</div>
 
-  <div id="app">
-
-    <!-- BIENVENIDA -->
-    <section id="welcome" class="screen active">
-      <h1 style="color:#00e676;">IMPOSTOR</h1>
-      <input type="text" id="userName" class="big-input" placeholder="Tu Nombre">
-      <button class="btn-big" onclick="entrarJuego()">ENTRAR</button>
-    </section>
-
-    <!-- ESPERA -->
-    <section id="waiting" class="screen">
-      <h2>SALA DE ESPERA</h2>
-      <p>Conectados: <span id="count">0</span></p>
-    </section>
-
-    <!-- ROL -->
-    <section id="role" class="screen">
-      <h2 id="roleTitle"></h2>
-      <h1 id="roleText" style="color:#00e676;"></h1>
-    </section>
-
-    <!-- TURNO -->
-    <section id="turnScreen" class="screen">
-      <h2>HABLANDO:</h2>
-      <h1 id="currentSpeakerName" style="color:#00e676;"></h1>
-      <button id="btnFinalizarTurno" class="btn-big"
-        onclick="terminarTurno()" style="display:none;">
-        TERMINAR TURNO
-      </button>
-    </section>
-
-    <!-- VOTACIÓN -->
-    <section id="end" class="screen">
-      <h2>VOTACIÓN</h2>
-      <div id="lista-votacion"></div>
-    </section>
-
-  </div>
-
-  <!-- JS AL FINAL (CLAVE) -->
-  <script src="script.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
+
 
