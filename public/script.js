@@ -2,26 +2,18 @@ const socket = io();
 let esAdmin = false;
 
 socket.on('vistas', (tipo) => {
-    console.log("Vista asignada:", tipo);
-    if (tipo === 'PROYECTOR') {
-        window.location.href = "proyector.html";
-    } else if (tipo === 'ADMIN') {
+    if (tipo === 'PROYECTOR') window.location.href = "proyector.html";
+    if (tipo === 'ADMIN') {
         esAdmin = true;
         document.getElementById("admin-panel").style.display = "block";
-        document.getElementById("btn-iniciar-ronda").style.display = "block";
-        showScreen("waiting");
-    } else {
-        showScreen("waiting");
+        document.getElementById("btn-iniciar-juego").style.display = "block";
     }
+    showScreen("waiting");
 });
 
 function entrarJuego() {
     const n = document.getElementById("userName").value.trim();
-    if (n) {
-        socket.emit('unirse', { nombre: n });
-    } else {
-        alert("Por favor, ingresa un nombre");
-    }
+    if (n) socket.emit('unirse', { nombre: n });
 }
 
 socket.on('infoSecretaAdmin', (data) => {
@@ -40,10 +32,9 @@ socket.on('recibirRol', (data) => {
         document.getElementById("roleText").innerText = data.palabra;
     }
     showScreen("role");
-    
-    // Si eres admin, te aparece el botón para iniciar turnos
+    // BOTÓN MAESTRO PARA ANDERSON
     if (esAdmin) {
-        document.getElementById("btn-iniciar-debate").style.display = "block";
+        document.getElementById("btn-debate-admin").style.display = "block";
     }
 });
 
@@ -51,15 +42,6 @@ socket.on('cambioDeTurno', (data) => {
     showScreen("turnScreen");
     document.getElementById("currentSpeakerName").innerText = data.nombre;
     document.getElementById("btnFinalizarTurno").style.display = (socket.id === data.idSocket) ? "block" : "none";
-    
-    const grid = document.getElementById("grid-jugadores");
-    grid.innerHTML = "";
-    data.lista.forEach(j => {
-        const div = document.createElement("div");
-        div.className = `cuadrito ${j.id === data.idSocket ? 'activo' : ''} ${j.eliminado ? 'eliminado' : ''}`;
-        div.innerText = j.nombre;
-        grid.appendChild(div);
-    });
 });
 
 socket.on('faseVotacion', (vivos) => {
@@ -70,12 +52,8 @@ socket.on('faseVotacion', (vivos) => {
         vivos.forEach(j => {
             if (j.id !== socket.id) {
                 const b = document.createElement("button");
-                b.className = "btn-voto";
-                b.innerText = j.nombre;
-                b.onclick = () => { 
-                    socket.emit('votarJugador', j.id); 
-                    lista.innerHTML = "Voto enviado"; 
-                };
+                b.className = "btn-voto"; b.innerText = j.nombre;
+                b.onclick = () => { socket.emit('votarJugador', j.id); lista.innerHTML = "Voto enviado"; };
                 lista.appendChild(b);
             }
         });
@@ -93,14 +71,10 @@ socket.on('resultadoVotacion', (res) => {
 
 function showScreen(id) {
     document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-    const target = document.getElementById(id);
-    if(target) target.classList.add("active");
+    document.getElementById(id).classList.add("active");
 }
 
-socket.on('actualizarLista', (n) => { 
-    const el = document.getElementById("count");
-    if(el) el.innerText = n; 
-});
+socket.on('actualizarLista', (n) => { document.getElementById("count").innerText = n; });
 
 
 
