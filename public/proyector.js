@@ -1,56 +1,54 @@
 const socket = io();
 socket.emit('unirse', { nombre: 'proyector' });
+let listaHermanos = [];
 
 socket.on('listaInicialProyeccion', (jugadores) => {
-    updateGrid(jugadores);
+    listaHermanos = jugadores;
+    renderGrid({});
 });
 
 socket.on('pantallaEstado', (estado) => {
-    const status = document.getElementById('status-top');
-    const main = document.getElementById('main-name');
-    const over = document.getElementById('overlay-result');
-
     if (estado === 'JUEGO_INICIADO') {
-        over.style.display = 'none';
-        status.innerText = "ATENCIÓN";
-        main.innerText = "LEAN SU FRASE";
-        main.style.color = "#00e676";
+        document.getElementById('overlay').style.display = 'none';
+        document.getElementById('turno-header').innerText = "ATENCION";
+        document.getElementById('main-val').innerText = "LEAN SU FRASE";
+        document.getElementById('vote-grid').innerHTML = "";
     }
     if (estado === 'VOTACION_ABIERTA') {
-        status.innerText = "MOMENTO DE";
-        main.innerText = "VOTAR";
-        main.style.color = "#ff9800";
+        document.getElementById('turno-header').innerText = "TURNO DE";
+        document.getElementById('main-val').innerText = "VOTAR";
+        renderGrid({});
     }
 });
 
-socket.on('cambioDeTurno', (data) => {
-    document.getElementById('overlay-result').style.display = 'none';
-    document.getElementById('status-top').innerText = "HABLANDO:";
-    document.getElementById('main-name').innerText = data.nombre;
-    document.getElementById('main-name').style.color = "#00e676";
-    updateGrid(data.lista, data.idSocket);
+socket.on('turnoEnPantalla', (nombre) => {
+    document.getElementById('overlay').style.display = 'none';
+    document.getElementById('turno-header').innerText = "TURNO DE";
+    document.getElementById('main-val').innerText = nombre;
+    document.getElementById('vote-grid').innerHTML = "";
 });
+
+socket.on('actualizarVotosProyeccion', (votos) => renderGrid(votos));
 
 socket.on('resultadoFinalProyeccion', (data) => {
-    const over = document.getElementById('overlay-result');
-    over.style.display = 'flex';
-    document.getElementById('over-titulo').innerText = data.titulo;
-    document.getElementById('over-titulo').style.color = data.temporal ? "#ff4444" : "#00e676";
-    document.getElementById('over-sub').innerText = data.sub;
-    document.getElementById('over-palabra').innerText = data.palabra ? "FRASE: " + data.palabra : "";
-
-    if (data.temporal) {
-        setTimeout(() => { over.style.display = 'none'; }, 8000);
-    }
+    const o = document.getElementById('overlay');
+    o.style.display = 'flex';
+    document.getElementById('o-titulo').innerText = data.titulo;
+    document.getElementById('o-titulo').style.color = data.color || "#00e676";
+    document.getElementById('o-sub').innerText = data.sub;
+    document.getElementById('o-palabra').innerText = data.palabra ? "FRRASE: " + data.palabra : "";
+    if (data.temporal) setTimeout(() => { o.style.display = 'none'; }, 8000);
 });
 
-function updateGrid(jugadores, activeId = null) {
-    const grid = document.getElementById('player-grid');
+function renderGrid(votos) {
+    const grid = document.getElementById('vote-grid');
     grid.innerHTML = "";
-    jugadores.forEach(j => {
-        const div = document.createElement('div');
-        div.className = `p-card ${j.id === activeId ? 'p-active' : ''} ${j.eliminated ? 'p-eliminated' : ''}`;
-        div.innerText = j.nombre;
-        grid.appendChild(div);
+    listaHermanos.forEach(j => {
+        if (!j.eliminado) {
+            const div = document.createElement('div');
+            div.className = 'v-card';
+            div.innerHTML = `<div class="v-name">${j.nombre}</div><div class="v-count">${votos[j.id] || 0}</div>`;
+            grid.appendChild(div);
+        }
     });
 }
