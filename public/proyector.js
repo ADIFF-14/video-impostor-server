@@ -1,34 +1,56 @@
 const socket = io();
 socket.emit('unirse', { nombre: 'proyector' });
 
-const container = document.body;
+socket.on('listaInicialProyeccion', (jugadores) => {
+    updateGrid(jugadores);
+});
 
 socket.on('pantallaEstado', (estado) => {
+    const status = document.getElementById('status-top');
+    const main = document.getElementById('main-name');
+    const over = document.getElementById('overlay-result');
+
     if (estado === 'JUEGO_INICIADO') {
-        renderProyector("ATENCIÓN", "LEAN SU FRASE", "#00e676");
+        over.style.display = 'none';
+        status.innerText = "ATENCIÓN";
+        main.innerText = "LEAN SU FRASE";
+        main.style.color = "#00e676";
     }
     if (estado === 'VOTACION_ABIERTA') {
-        renderProyector("MOMENTO DE", "VOTAR", "#ff9800");
+        status.innerText = "MOMENTO DE";
+        main.innerText = "VOTAR";
+        main.style.color = "#ff9800";
     }
 });
 
-socket.on('turnoEnPantalla', (nombre) => {
-    renderProyector("TIENE LA PALABRA:", nombre, "#00e676");
+socket.on('cambioDeTurno', (data) => {
+    document.getElementById('overlay-result').style.display = 'none';
+    document.getElementById('status-top').innerText = "HABLANDO:";
+    document.getElementById('main-name').innerText = data.nombre;
+    document.getElementById('main-name').style.color = "#00e676";
+    updateGrid(data.lista, data.idSocket);
 });
 
 socket.on('resultadoFinalProyeccion', (data) => {
-    let html = `<h1 style="font-size:5rem; color:${data.temporal ? '#ff4444' : '#00e676'}">${data.titulo}</h1>`;
-    html += `<h2 style="font-size:3rem; opacity:0.8">${data.sub}</h2>`;
-    if(data.palabra) html += `<h1 style="font-size:4rem; margin-top:40px">FRASE: ${data.palabra}</h1>`;
-    
-    document.body.innerHTML = `<div style="text-align:center; width:100%">${html}</div>`;
+    const over = document.getElementById('overlay-result');
+    over.style.display = 'flex';
+    document.getElementById('over-titulo').innerText = data.titulo;
+    document.getElementById('over-titulo').style.color = data.temporal ? "#ff4444" : "#00e676";
+    document.getElementById('over-sub').innerText = data.sub;
+    document.getElementById('over-palabra').innerText = data.palabra ? "FRASE: " + data.palabra : "";
+
+    if (data.temporal) {
+        setTimeout(() => { over.style.display = 'none'; }, 8000);
+    }
 });
 
-function renderProyector(sub, main, color) {
-    document.body.innerHTML = `
-        <div style="text-align:center; width:100%">
-            <p style="font-size:3rem; text-transform:uppercase; margin:0">${sub}</p>
-            <h1 style="font-size:8rem; color:${color}; background:#111; padding:40px; border-radius:40px; border:10px solid ${color}; margin:20px">${main}</h1>
-        </div>
-    `;
+function updateGrid(jugadores, activeId = null) {
+    const grid = document.getElementById('player-grid');
+    grid.innerHTML = "";
+    jugadores.forEach(j => {
+        const div = document.createElement('div');
+        div.className = `p-card ${j.id === activeId ? 'p-active' : ''} ${j.eliminated ? 'p-eliminated' : ''}`;
+        div.innerText = j.nombre;
+        grid.appendChild(div);
+    });
 }
