@@ -18,9 +18,4 @@ h1.main-title { font-size: 42px; letter-spacing: 4px; color: #00e676; margin-bot
 .cuadrito.activo { border-color: #00e676; background: rgba(0, 230, 118, 0.1); color: #00e676; font-weight: bold; }
 .cuadrito.eliminado { opacity: 0.15; filter: grayscale(1); }
 
-.mic-container { position: absolute; top: -70px; right: 0; }
-.btn-mute { width: 55px; height: 55px; border-radius: 50%; border: none; cursor: pointer; font-size: 22px; background: #00e676; display: flex; align-items: center; justify-content: center; }
-.btn-mute.muted { background: #ff5252; color: white; }
-
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
