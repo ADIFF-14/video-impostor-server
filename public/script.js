@@ -1,69 +1,58 @@
 const socket = io();
-let esAdmin = false;
+let soyAdmin = false;
 
-socket.on('vistas', (tipo) => {
-    if (tipo === 'ADMIN') {
-        esAdmin = true;
-        document.getElementById("admin-panel").style.display = "block";
-        document.getElementById("adminBtn").style.display = "block";
-    }
-    showScreen("waiting");
-});
-
-function entrarJuego() {
-    const n = document.getElementById("userName").value.trim();
-    if (n) socket.emit('unirse', { nombre: n });
+function entrar() {
+  const nombre = document.getElementById('nombre').value;
+  socket.emit('unirse', { nombre });
 }
 
-socket.on('infoSecretaAdmin', (data) => {
-    if (esAdmin) {
-        const imp = data.jugadores.find(j => j.rol === "IMPOSTOR");
-        document.getElementById("admin-info").innerText = `IMP: ${imp.nombre} | FRASE: ${data.palabra}`;
-        document.getElementById("btn-debate-fijo").style.display = "block";
+socket.on('vista', (tipo) => {
+  if (tipo === 'ADMIN') {
+    soyAdmin = true;
+    document.getElementById('admin').style.display = 'block';
+  }
+  mostrar('espera');
+});
+
+socket.on('contador', n => {
+  document.getElementById('count').innerText = n;
+});
+
+socket.on('rol', data => {
+  mostrar('rol');
+  if (data.tipo === 'IMPOSTOR') {
+    document.getElementById('rolTexto').innerText = "ERES EL IMPOSTOR";
+  } else {
+    document.getElementById('rolTexto').innerText = data.palabra;
+  }
+});
+
+socket.on('turno', data => {
+  mostrar('turno');
+  document.getElementById('habla').innerText = data.nombre;
+  document.getElementById('btnFin').style.display =
+    socket.id === data.id ? 'block' : 'none';
+});
+
+socket.on('faseVotacion', jugadores => {
+  mostrar('votar');
+  const c = document.getElementById('lista');
+  c.innerHTML = '';
+  jugadores.forEach(j => {
+    if (j.id !== socket.id) {
+      const b = document.createElement('button');
+      b.innerText = j.nombre;
+      b.onclick = () => socket.emit('votar', j.id);
+      c.appendChild(b);
     }
+  });
 });
 
-socket.on('cambioDeTurno', (data) => {
-    showScreen("turnScreen");
-    document.getElementById("currentSpeakerName").innerText = data.nombre;
-    document.getElementById("btnFinalizarTurno").style.display = (socket.id === data.idSocket) ? "block" : "none";
-});
-
-socket.on('faseVotacion', (vivos) => {
-    showScreen("end");
-    const lista = document.getElementById("lista-votacion");
-    lista.innerHTML = esAdmin ? "<p style='color:white'>VOTACIÓN EN CURSO...</p>" : "";
-    if (!esAdmin) {
-        vivos.forEach(j => {
-            if (j.id !== socket.id) {
-                const b = document.createElement("button");
-                b.className = "btn-big"; 
-                b.style.background = "#fff"; b.style.color = "#000"; b.style.marginBottom = "10px";
-                b.innerText = j.nombre;
-                b.onclick = () => { socket.emit('votarJugador', j.id); lista.innerHTML = "Voto enviado"; };
-                lista.appendChild(b);
-            }
-        });
-    }
-});
-
-socket.on('resultadoVotacion', (res) => {
-    showScreen("result");
-    document.getElementById("texto-res").innerText = res.mensaje;
-    if (res.terminar) {
-        document.getElementById("texto-palabra").innerText = "LA FRASE ERA: " + res.palabraReal;
-        if (esAdmin) document.getElementById("btn-reiniciar").style.display = "block";
-    }
-});
-
-function showScreen(id) {
-    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-    document.getElementById(id).classList.add("active");
+function mostrar(id) {
+  document.querySelectorAll('.pantalla').forEach(p => p.style.display = 'none');
+  document.getElementById(id).style.display = 'block';
 }
 
-socket.on('actualizarLista', (n) => { 
-    if(document.getElementById("count")) document.getElementById("count").innerText = n; 
-});
 
 
 
