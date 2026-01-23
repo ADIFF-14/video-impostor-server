@@ -198,10 +198,11 @@ io.on("connection", (socket) => {
         expulsado: expulsado.nombre,
         esImpostor: true
       });
+      io.emit("finPartida");
       return;
     }
 
-    /* ❌ NO LO ATRAPARON */
+    /* ❌ NO LO ATRAPARON EN RONDA 1 */
     if (rondaActual === 1) {
       rondaActual = 2;
       votosRecibidos = {};
@@ -212,13 +213,15 @@ io.on("connection", (socket) => {
       return;
     }
 
-    /* 🏆 IMPOSTOR GANA */
+    /* 🏆 IMPOSTOR GANA (RONDA 2) */
     const imp = jugadores.find(j => j.id === impostorId);
     io.to("sala_proyeccion").emit("resultadoFinalProyeccion", {
       expulsado: imp ? imp.nombre : "El impostor",
       esImpostor: false,
       ganador: "IMPOSTOR"
     });
+
+    io.emit("finPartida");
   }
 
   socket.on("disconnect", () => {
@@ -235,5 +238,4 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log("Servidor corriendo en puerto", PORT);
 });
-
 
