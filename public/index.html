@@ -1,14 +1,5 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8"><title>IMPOSTOR</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-    <script src="/socket.io/socket.io.js"></script>
-</head>
-<body>
 <div id="app">
-    <div id="admin-panel" style="display:none; background:#1a1a1a; padding:15px; border-bottom:3px solid #00e676; font-weight:bold; position: sticky; top: 0; z-index: 999;">
+    <div id="admin-panel" style="display:none; background:#1a1a1a; padding:15px; border-bottom:3px solid #00e676; font-weight:bold;">
         🕵️ INFO ADMIN: <span id="admin-info" style="color:#00e676"></span>
     </div>
 
@@ -21,14 +12,13 @@
     <section id="waiting" class="screen">
         <h2>Sala de Espera</h2>
         <p>Hermanos conectados: <span id="count">0</span></p>
-        <button id="adminBtn" style="display:none" class="btn-big" onclick="socket.emit('iniciarRonda')">🚀 INICIAR JUEGO</button>
+        <button id="adminBtn" style="display:none" class="btn-big" onclick="iniciarRondaAdmin()">🚀 INICIAR JUEGO</button>
     </section>
 
     <section id="role" class="screen">
-        <h2 id="roleTitle" style="opacity:0.6; font-size:18px;"></h2>
-        <h1 id="roleText" style="color:#00e676; font-size:40px; margin:20px 0;"></h1>
-        <p style="font-size:14px; opacity:0.5;">Atento a las instrucciones de Anderson</p>
-        <button id="startDebateBtn" style="display:none; background:#e67e22; color:white;" class="btn-big" onclick="iniciarDebate()">EMPEZAR DEBATE</button>
+        <h2 id="roleTitle"></h2>
+        <h1 id="roleText"></h1>
+        <button id="startDebateBtn" style="display:none; background:#e67e22; color:white;" class="btn-big" onclick="iniciarDebateAdmin()">EMPEZAR DEBATE</button>
     </section>
 
     <section id="turnScreen" class="screen">
@@ -39,18 +29,5 @@
         </div>
         <button id="btnFinalizarTurno" class="btn-big" style="display:none; margin-top:15px;" onclick="socket.emit('finalizarMiTurno')">PASAR TURNO</button>
     </section>
-
-    <section id="end" class="screen">
-        <h2 style="opacity:0.6;">VOTACIÓN</h2>
-        <div id="lista-votacion"></div>
-    </section>
-
-    <section id="result" class="screen">
-        <h1 id="texto-res" style="white-space: pre-wrap; font-size: 18px;"></h1>
-        <h2 id="texto-palabra"></h2>
-        <button id="btnNext" style="display:none" class="btn-big" onclick="socket.emit('iniciarRonda')">🔄 NUEVA PARTIDA</button>
-    </section>
-</div>
-<script src="script.js"></script>
-</body>
-</html>
+    
+    </div>
