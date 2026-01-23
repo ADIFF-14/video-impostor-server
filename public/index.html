@@ -10,14 +10,16 @@
         .active { display: block; }
         .btn-big { background: #00e676; color: black; border: none; padding: 15px; width: 100%; font-weight: bold; border-radius: 10px; cursor: pointer; margin-top: 15px; font-size: 1.1rem; }
         .btn-voto { background: #fff !important; color: #000 !important; font-weight: 900; margin-bottom: 8px; border: none; padding: 12px; width: 100%; border-radius: 8px; font-size: 1.1rem; }
-        #admin-panel { position: fixed; top: 0; width: 100%; background: #1a1a1a; border-bottom: 2px solid #00e676; padding: 10px; display: none; }
+        #admin-panel { position: fixed; top: 0; width: 100%; background: #1a1a1a; border-bottom: 2px solid #00e676; padding: 10px; display: none; z-index: 100; }
     </style>
 </head>
 <body>
     <div id="admin-panel">
         <div id="admin-info" style="color: #00e676; font-size: 0.8rem; margin-bottom: 5px;"></div>
-        <button id="btn-debate-fijo" class="btn-big" style="display:none; background:#ff9800; color:white; margin:0;" onclick="socket.emit('empezarDebateOficial')">🎙️ DEBATE</button>
-        <button id="btn-forzar" class="btn-big" style="display:none; background:#e74c3c; color:white; margin:0;" onclick="socket.emit('adminForzarTurno')">⏩ SIGUIENTE</button>
+        <div style="display: flex; gap: 5px;">
+            <button id="btn-debate" class="btn-big" style="display:none; background:#ff9800; color:white; margin:0; flex:1;" onclick="socket.emit('empezarDebateOficial')">🎙️ DEBATE</button>
+            <button id="btn-forzar" class="btn-big" style="display:none; background:#e74c3c; color:white; margin:0; flex:1;" onclick="socket.emit('adminForzarTurno')">⏩ SIGUIENTE</button>
+        </div>
     </div>
     <div id="app">
         <section id="welcome" class="screen active">
@@ -34,7 +36,7 @@
         <section id="turnScreen" class="screen">
             <h2 style="opacity:0.5">Hablando:</h2>
             <h1 id="currentSpeakerName" style="color:#00e676">---</h1>
-            <button id="btnFinalizarTurno" class="btn-big" style="display:none" onclick="socket.emit('finalizarMiTurno')">PASAR TURNO</button>
+            <button id="btnFinalizarTurno" class="btn-big" style="display:none" onclick="socket.emit('finalizarMiTurno')">TERMINAR TURNO</button>
         </section>
         <section id="end" class="screen"><h2>VOTA AL IMPOSTOR</h2><div id="lista-votacion"></div></section>
         <section id="result" class="screen"><h1 id="texto-res"></h1><h2 id="texto-palabra" style="color:#00e676"></h2><button id="btn-reiniciar" style="display:none" class="btn-big" onclick="socket.emit('iniciarRonda')">🔄 NUEVA PARTIDA</button></section>
