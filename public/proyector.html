@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>IMPOSTOR - PANTALLA GIGANTE</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <link rel="stylesheet" href="style.css"> <style>
+        body { background-color: #0b0e14; color: white; overflow: hidden; font-family: sans-serif; }
+        #pantalla-proyeccion { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; }
+        #marcador-votos { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-top: 30px; }
+        .tarjeta-jugador { background: #1c222d; border: 4px solid #303846; border-radius: 15px; padding: 20px; min-width: 200px; transition: all 0.3s; }
+        .tarjeta-jugador.voto-recibido { transform: scale(1.1); border-color: #f39c12; }
+        .nombre-p { font-size: 2rem; font-weight: bold; margin-bottom: 10px; }
+        .votos-p { font-size: 4rem; color: #f39c12; }
+        #mensaje-central { font-size: 5rem; text-transform: uppercase; color: #e74c3c; animation: pulse 1s infinite; display: none; }
+        #turno-gigante { font-size: 3rem; background: #2ecc71; padding: 10px 40px; border-radius: 50px; margin-bottom: 20px; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+    </style>
+</head>
+<body>
+    <div id="pantalla-proyeccion">
+        <div id="esperando">
+            <h1 style="font-size: 4rem;">ESPERANDO JUGADORES...</h1>
+            <p style="font-size: 2rem;">Únete con tu nombre en la web</p>
+        </div>
+
+        <div id="juego-activo" style="display: none;">
+            <div id="turno-gigante">TURNO DE: <span id="nombre-turno">---</span></div>
+            <div id="mensaje-central"></div>
+            <div id="marcador-votos"></div>
+        </div>
+    </div>
+    <script src="proyector.js"></script>
+</body>
+</html>
