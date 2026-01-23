@@ -6,7 +6,6 @@ socket.on('vistas', (tipo) => {
         window.location.href = "proyector.html";
     } else if (tipo === 'ADMIN') {
         esAdmin = true;
-        document.body.classList.add("is-admin"); // Marca el cuerpo como admin
         document.getElementById("admin-panel").style.display = "block";
         document.getElementById("adminBtn").style.display = "block";
         showScreen("waiting");
@@ -20,6 +19,16 @@ function entrarJuego() {
     if (n) socket.emit('unirse', { nombre: n });
 }
 
+// Botón "Iniciar Juego" (Anderson)
+function iniciarRondaAdmin() {
+    socket.emit('iniciarRonda');
+}
+
+// Botón "Iniciar Debate" (Anderson)
+function iniciarDebateAdmin() {
+    socket.emit('empezarDebateOficial');
+}
+
 socket.on('infoSecretaAdmin', (data) => {
     if (esAdmin) {
         const imp = data.jugadores.find(j => j.rol === "IMPOSTOR");
@@ -28,27 +37,21 @@ socket.on('infoSecretaAdmin', (data) => {
 });
 
 socket.on('recibirRol', (data) => {
-    // CAMBIO PARA LA IGLESIA
-    if (data.rol === "IMPOSTOR") {
-        document.getElementById("roleTitle").innerText = "ERES EL IMPOSTOR";
-        document.getElementById("roleText").innerText = "Descubre la frase secreta de los demás";
-    } else {
-        document.getElementById("roleTitle").innerText = "TU FRASE ES:";
-        document.getElementById("roleText").innerText = data.palabra;
-    }
-    
-    showScreen("role");
-    
-    // FORZAR BOTÓN DE DEBATE
     if (esAdmin) {
-        document.getElementById("startDebateBtn").style.display = "block";
+        document.getElementById("roleTitle").innerText = "MODO ADMINISTRADOR";
+        document.getElementById("roleText").innerText = "Esperando que los hermanos lean su frase...";
+        document.getElementById("startDebateBtn").style.display = "block"; // Aquí forzamos el botón
+    } else {
+        if (data.rol === "IMPOSTOR") {
+            document.getElementById("roleTitle").innerText = "ERES EL IMPOSTOR";
+            document.getElementById("roleText").innerText = "Misión: Descubre la frase secreta de los demás";
+        } else {
+            document.getElementById("roleTitle").innerText = "TU FRASE ES:";
+            document.getElementById("roleText").innerText = data.palabra;
+        }
     }
+    showScreen("role");
 });
-
-// Función que llama el botón de Debate
-function iniciarDebate() {
-    socket.emit('empezarDebateOficial');
-}
 
 socket.on('cambioDeTurno', (data) => {
     showScreen("turnScreen");
@@ -62,25 +65,21 @@ socket.on('cambioDeTurno', (data) => {
     });
     document.getElementById("currentSpeakerName").innerText = data.nombre;
     
-    // El botón de pasar turno solo le sale al que tiene el turno
+    // El botón de terminar turno solo aparece para el que está hablando
     document.getElementById("btnFinalizarTurno").style.display = (socket.id === data.idSocket) ? "block" : "none";
 });
 
 socket.on('faseVotacion', (vivos) => {
     showScreen("end");
     const lista = document.getElementById("lista-votacion");
-    lista.innerHTML = esAdmin ? "<p style='color:#00e676'>Votación en curso... Mira la pantalla grande</p>" : "";
-    
+    lista.innerHTML = esAdmin ? "<p style='color:#00e676'>Votación en curso...</p>" : "";
     if (!esAdmin) {
         vivos.forEach(j => {
             if(j.id !== socket.id) {
                 const b = document.createElement("button");
                 b.className = "btn-voto";
                 b.innerText = j.nombre;
-                b.onclick = () => { 
-                    socket.emit('votarJugador', j.id); 
-                    lista.innerHTML = "Voto enviado correctamente"; 
-                };
+                b.onclick = () => { socket.emit('votarJugador', j.id); lista.innerHTML = "Voto enviado"; };
                 lista.appendChild(b);
             }
         });
@@ -102,8 +101,7 @@ function showScreen(id) {
 }
 
 socket.on('actualizarLista', (n) => { 
-    const el = document.getElementById("count");
-    if(el) el.innerText = n; 
+    document.getElementById("count").innerText = n; 
 });
 
 
