@@ -1,51 +1,35 @@
 const socket = io();
 socket.emit('unirse', { nombre: 'proyector' });
-let listaHermanos = [];
 
-socket.on('listaInicialProyeccion', (jugadores) => {
-    listaHermanos = jugadores;
+socket.on('actualizarJugadores', jugadores => {
+  const g = document.getElementById('grid');
+  g.innerHTML = '';
+  jugadores.forEach(j => {
+    const d = document.createElement('div');
+    d.innerText = j.nombre;
+    d.className = 'card';
+    g.appendChild(d);
+  });
 });
 
-socket.on('pantallaEstado', (estado) => {
-    if (estado === 'JUEGO_INICIADO') {
-        document.getElementById('overlay').style.display = 'none';
-        document.getElementById('header').innerText = "ATENCION";
-        document.getElementById('main-val').innerText = "LEAN SU FRASE";
-    }
-    if (estado === 'VOTACION_ABIERTA') {
-        document.getElementById('header').innerText = "SISTEMA DE VOTACIÓN";
-        document.getElementById('main-val').innerText = "VOTEN EN SU CELULAR";
-        renderGrid({});
-    }
+socket.on('turnoPantalla', nombre => {
+  document.getElementById('main').innerText = nombre;
 });
 
-socket.on('turnoEnPantalla', (nombre) => {
-    document.getElementById('header').innerText = "HABLANDO:";
-    document.getElementById('main-val').innerText = nombre;
-    document.getElementById('vote-grid').innerHTML = ""; 
+socket.on('votosPantalla', votos => {
+  // opcional: mostrar conteo
 });
 
-socket.on('actualizarVotosProyeccion', (votos) => renderGrid(votos));
+socket.on('resultadoFinal', data => {
+  const o = document.getElementById('overlay');
+  o.style.display = 'flex';
 
-socket.on('resultadoFinalProyeccion', (data) => {
-    const o = document.getElementById('overlay');
-    o.style.display = 'flex';
-    document.getElementById('o-titulo').innerText = data.titulo;
-    document.getElementById('o-titulo').style.color = data.color;
-    document.getElementById('o-sub').innerText = data.sub;
-    document.getElementById('o-palabra').innerText = data.palabra ? "FRASE: " + data.palabra : "";
-    if (data.temporal) setTimeout(() => { o.style.display = 'none'; }, 8000);
+  if (data.esImpostor) {
+    document.getElementById('res').innerText =
+      `TE ATRAPAMOS\n${data.nombre}\nERAS EL IMPOSTOR`;
+  } else {
+    document.getElementById('res').innerText =
+      `${data.nombre}\nERES INOCENTE\nNO ERAS EL IMPOSTOR`;
+  }
 });
 
-function renderGrid(votos) {
-    const grid = document.getElementById('vote-grid');
-    grid.innerHTML = "";
-    listaHermanos.forEach(j => {
-        if (!j.eliminado) {
-            const div = document.createElement('div');
-            div.className = 'v-card';
-            div.innerHTML = `<div style="font-size:1.5rem">${j.nombre}</div><div class="v-count">${votos[j.id] || 0}</div>`;
-            grid.appendChild(div);
-        }
-    });
-}
