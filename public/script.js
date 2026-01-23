@@ -20,15 +20,15 @@ socket.on('infoSecretaAdmin', (data) => {
     if (esAdmin) {
         const imp = data.jugadores.find(j => j.rol === "IMPOSTOR");
         document.getElementById("admin-info").innerText = `IMPOSTOR: ${imp.nombre} | PALABRA: ${data.palabra}`;
-        // MOSTRAR BOTÓN DE DEBATE EN EL PANEL SUPERIOR
         document.getElementById("btn-debate-fijo").style.display = "block";
+        document.getElementById("btn-reiniciar").style.display = "none";
     }
 });
 
 socket.on('recibirRol', (data) => {
     if (data.rol === "IMPOSTOR") {
         document.getElementById("roleTitle").innerText = "ERES EL IMPOSTOR";
-        document.getElementById("roleText").innerText = "Descubre la frase secreta de los demás";
+        document.getElementById("roleText").innerText = "Descubre la frase secreta";
     } else {
         document.getElementById("roleTitle").innerText = "TU FRASE ES:";
         document.getElementById("roleText").innerText = data.palabra;
@@ -46,7 +46,7 @@ socket.on('cambioDeTurno', (data) => {
 socket.on('faseVotacion', (vivos) => {
     showScreen("end");
     const lista = document.getElementById("lista-votacion");
-    lista.innerHTML = esAdmin ? "Votación en curso..." : "";
+    lista.innerHTML = esAdmin ? "Esperando votos..." : "";
     if (!esAdmin) {
         vivos.forEach(j => {
             if (j.id !== socket.id) {
@@ -66,6 +66,8 @@ socket.on('resultadoVotacion', (res) => {
     if (res.terminar) {
         document.getElementById("texto-palabra").innerText = "La frase era: " + res.palabraReal;
         if (esAdmin) document.getElementById("btn-reiniciar").style.display = "block";
+    } else {
+        document.getElementById("texto-palabra").innerText = "Prepárense para la siguiente ronda...";
     }
 });
 
