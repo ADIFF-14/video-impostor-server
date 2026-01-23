@@ -27,19 +27,16 @@ function mezclar(array) {
 io.on('connection', (socket) => {
     socket.on('unirse', (datos) => {
         const nombreBuscado = datos.nombre.toLowerCase().trim();
-
         if (nombreBuscado === 'proyector') {
             socket.join('sala_proyeccion');
             socket.emit('vistas', 'PROYECTOR');
             return;
         }
-
         if (nombreBuscado === 'anderson') {
             socket.join('sala_admin');
             socket.emit('vistas', 'ADMIN');
             return;
         }
-
         jugadores.push({ id: socket.id, nombre: datos.nombre, eliminado: false, rol: "" });
         socket.emit('vistas', 'JUGADOR');
         io.emit('actualizarLista', jugadores.length);
@@ -51,7 +48,6 @@ io.on('connection', (socket) => {
         rondaActual = 1;
         votosRecibidos = {};
         jugadores.forEach(j => { j.eliminado = false; j.rol = "CIUDADANO"; });
-        
         const impIndex = Math.floor(Math.random() * jugadores.length);
         jugadores[impIndex].rol = "IMPOSTOR";
         palabraActual = palabras[Math.floor(Math.random() * palabras.length)];
@@ -60,12 +56,12 @@ io.on('connection', (socket) => {
             const info = (j.rol === "IMPOSTOR") ? { rol: "IMPOSTOR" } : { rol: "CIUDADANO", palabra: palabraActual };
             io.to(j.id).emit('recibirRol', info);
         });
-
         io.to('sala_admin').emit('infoSecretaAdmin', { jugadores, palabra: palabraActual });
         io.to('sala_proyeccion').emit('pantallaEstado', 'JUEGO_INICIADO');
         io.to('sala_proyeccion').emit('listaInicialProyeccion', jugadores);
     });
 
+    // ESTA FUNCIÓN ES LA QUE ACTIVA LOS TURNOS
     socket.on('empezarDebateOficial', () => {
         indiceTurno = 0;
         votosRecibidos = {};
@@ -81,7 +77,11 @@ io.on('connection', (socket) => {
 
     function notificarTurno() {
         if (indiceTurno < ordenHablar.length) {
-            const datosTurno = { nombre: ordenHablar[indiceTurno].nombre, idSocket: ordenHablar[indiceTurno].id, lista: jugadores };
+            const datosTurno = { 
+                nombre: ordenHablar[indiceTurno].nombre, 
+                idSocket: ordenHablar[indiceTurno].id, 
+                lista: jugadores 
+            };
             io.emit('cambioDeTurno', datosTurno);
             io.to('sala_proyeccion').emit('turnoEnPantalla', datosTurno.nombre);
         } else {
@@ -100,9 +100,9 @@ io.on('connection', (socket) => {
         Object.keys(votosRecibidos).forEach(id => { conteoVotos[id] = votosRecibidos[id].length; });
         io.to('sala_proyeccion').emit('actualizarVotosProyeccion', conteoVotos);
 
-        if (Object.values(votosRecibidos).flat().length >= jugadores.filter(j => !j.eliminado).length) {
-            procesarVotacion();
-        }
+        const totalVotos = Object.values(votosRecibidos).flat().length;
+        const vivos = jugadores.filter(j => !j.eliminado).length;
+        if (totalVotos >= vivos) { procesarVotacion(); }
     });
 
     function procesarVotacion() {
@@ -111,21 +111,17 @@ io.on('connection', (socket) => {
             const obj = jugadores.find(j => j.id === id);
             resumen += `${obj.nombre}: ${votosRecibidos[id].length} votos\n`;
         });
-
         let max = 0, expId = null;
         Object.keys(votosRecibidos).forEach(id => {
             if (votosRecibidos[id].length > max) { max = votosRecibidos[id].length; expId = id; }
         });
-
         const expulsado = jugadores.find(j => j.id === expId);
         if(!expulsado) return;
         expulsado.eliminado = true;
 
         const data = { expulsado: expulsado.nombre, esImpostor: expulsado.rol === "IMPOSTOR", detalle: resumen, palabraReal: palabraActual };
-        
         io.emit('resultadoVotacion', { mensaje: resumen, terminar: data.esImpostor || rondaActual >= 3, palabraReal: palabraActual });
         io.to('sala_proyeccion').emit('resultadoFinalProyeccion', data);
-        
         if (!data.esImpostor) rondaActual++;
         votosRecibidos = {};
     }
