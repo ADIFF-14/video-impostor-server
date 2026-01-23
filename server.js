@@ -14,7 +14,7 @@ let palabraActual = "";
 let votosRecibidos = {}; 
 let rondaActual = 1;
 
-const palabras = ["Pizza", "Avión", "WhatsApp", "Netflix", "Fútbol", "Cine", "Playa", "Gato", "Reloj", "Bicicleta", "Hamburguesa", "Internet", "Instagram", "Parque", "Café", "Escuela", "Navidad", "Música", "Helado", "Libro", "Carro", "Perro", "Sol", "Trabajo", "Viaje", "Tacos", "Guitarra", "Hospital", "Cámara", "Luna", "Dinero", "Piscina", "Televisión", "Dormir", "Bailar", "Fruta", "Chocolate", "YouTube", "Teléfono", "Estudiar", "Policía", "Bombero", "Estadio", "Cerveza", "Sushi", "Zapato", "Verano", "Maleta", "Videojuego"];
+const palabras = ["Pizza", "Avión", "WhatsApp", "Netflix", "Fútbol", "Cine", "Playa", "Gato", "Reloj", "Bicicleta", "Internet", "Navidad", "Música", "Helado", "Libro", "Carro", "Perro", "Viaje", "Tacos", "Guitarra", "Hospital", "Cámara", "Luna", "Dinero", "Piscina", "Videojuego"];
 
 function mezclar(array) {
     for (let i = array.length - 1; i > 0; i--) {
@@ -35,7 +35,8 @@ io.on('connection', (socket) => {
             socket.join('sala_admin');
             return socket.emit('vistas', 'ADMIN');
         }
-        jugadores.push({ id: socket.id, nombre: datos.nombre, eliminado: false, rol: "" });
+        const nuevo = { id: socket.id, nombre: datos.nombre, eliminado: false, rol: "" };
+        jugadores.push(nuevo);
         socket.emit('vistas', 'JUGADOR');
         io.emit('actualizarLista', jugadores.length);
         io.to('sala_proyeccion').emit('listaInicialProyeccion', jugadores);
@@ -61,12 +62,8 @@ io.on('connection', (socket) => {
     socket.on('empezarDebateOficial', () => {
         indiceTurno = 0;
         let vivos = jugadores.filter(j => !j.eliminado);
-        let lista = mezclar([...vivos]);
-        // REGLA: El impostor nunca empieza
-        if (lista[0].rol === "IMPOSTOR") {
-            lista.push(lista.shift());
-        }
-        ordenHablar = lista;
+        ordenHablar = mezclar([...vivos]);
+        if (ordenHablar[0].rol === "IMPOSTOR") { ordenHablar.push(ordenHablar.shift()); }
         notificarTurno();
     });
 
@@ -77,9 +74,9 @@ io.on('connection', (socket) => {
 
     function notificarTurno() {
         if (indiceTurno < ordenHablar.length) {
-            const datosTurno = { nombre: ordenHablar[indiceTurno].nombre, idSocket: ordenHablar[indiceTurno].id, lista: jugadores };
-            io.emit('cambioDeTurno', datosTurno);
-            io.to('sala_proyeccion').emit('turnoEnPantalla', datosTurno.nombre);
+            const d = { nombre: ordenHablar[indiceTurno].nombre, idSocket: ordenHablar[indiceTurno].id, lista: jugadores };
+            io.emit('cambioDeTurno', d);
+            io.to('sala_proyeccion').emit('turnoEnPantalla', d.nombre);
         } else {
             io.emit('faseVotacion', jugadores.filter(j => !j.eliminado));
             io.to('sala_proyeccion').emit('pantallaEstado', 'VOTACION_ABIERTA');
@@ -90,7 +87,10 @@ io.on('connection', (socket) => {
         if (!votosRecibidos[idVotado]) votosRecibidos[idVotado] = [];
         const votante = jugadores.find(j => j.id === socket.id);
         if (votante) votosRecibidos[idVotado].push(votante.nombre);
-        io.to('sala_proyeccion').emit('actualizarVotosProyeccion', votosRecibidos);
+        
+        const conteo = {};
+        Object.keys(votosRecibidos).forEach(id => { conteo[id] = votosRecibidos[id].length; });
+        io.to('sala_proyeccion').emit('actualizarVotosProyeccion', conteo);
 
         if (Object.values(votosRecibidos).flat().length >= jugadores.filter(j => !j.eliminado).length) {
             procesarVotacion();
