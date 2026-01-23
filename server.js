@@ -14,21 +14,28 @@ let palabraActual = "";
 let votosRecibidos = {}; 
 let rondaActual = 1;
 
-const palabrasBiblicas = ["El Arca de Noe", "Los Diez Mandamientos", "El Mar Rojo", "La Zarza Ardiendo", "David y Goliat", "El Jardin del Eden", "El Mana", "La Torre de Babel", "La Tunica de Jose", "El Pez de Jonas", "Las Murallas de Jerico", "Sanson y Dalila", "El Rey Salomon", "La Reina Ester", "La Estrella de Belen", "El Pesebre", "El Bautismo", "El Rio Jordan", "La Ultima Cena", "La Corona de Espinas", "La Cruz", "La Tumba Vacia", "La Resurreccion", "El Espiritu Santo", "La Armadura de Dios"];
+const palabrasBiblicas = ["El Arca de Noé", "Los Diez Mandamientos", "El Mar Rojo", "La Zarza Ardiendo", "David y Goliat", "El Jardín del Edén", "El Maná", "La Torre de Babel", "La Túnica de José", "El Pez de Jonás", "Las Murallas de Jericó", "La Estrella de Belén", "El Pesebre", "El Bautismo", "La Última Cena", "La Cruz", "La Resurrección"];
 
 io.on('connection', (socket) => {
     socket.on('unirse', (datos) => {
         const nombre = datos.nombre.toLowerCase().trim();
+        
         if (nombre === 'proyector') {
             socket.join('sala_proyeccion');
-            return socket.emit('vistas', 'PROYECTOR');
+            socket.emit('vistas', 'PROYECTOR');
+            // Enviamos la lista actual pero el proyector NO se suma a "jugadores"
+            return socket.emit('listaInicialProyeccion', jugadores);
         }
+        
         if (nombre === 'anderson') {
             socket.join('sala_admin');
-            return socket.emit('vistas', 'ADMIN');
+            socket.emit('vistas', 'ADMIN');
+        } else {
+            socket.emit('vistas', 'JUGADOR');
         }
+
+        // Solo humanos que juegan entran aquí
         jugadores.push({ id: socket.id, nombre: datos.nombre, eliminado: false, rol: "" });
-        socket.emit('vistas', 'JUGADOR');
         io.emit('actualizarLista', jugadores.length);
         io.to('sala_proyeccion').emit('listaInicialProyeccion', jugadores);
     });
@@ -45,7 +52,6 @@ io.on('connection', (socket) => {
         });
         io.to('sala_admin').emit('infoSecretaAdmin', { jugadores, palabra: palabraActual });
         io.to('sala_proyeccion').emit('pantallaEstado', 'JUEGO_INICIADO');
-        io.to('sala_proyeccion').emit('listaInicialProyeccion', jugadores);
     });
 
     socket.on('empezarDebateOficial', () => iniciarDebate());
@@ -63,7 +69,7 @@ io.on('connection', (socket) => {
     function notificarTurno() {
         if (indiceTurno < ordenHablar.length) {
             io.emit('cambioDeTurno', { nombre: ordenHablar[indiceTurno].nombre, idSocket: ordenHablar[indiceTurno].id, lista: jugadores });
-            io.to('sala_proyeccion').emit('turnoEnPantalla', ordenHablar[indiceTurno].nombre);
+            io.to('sala_proyeccion').emit('turnoEnPantalla', { nombre: ordenHablar[indiceTurno].nombre, id: ordenHablar[indiceTurno].id });
         } else {
             io.emit('faseVotacion', jugadores.filter(j => !j.eliminado));
             io.to('sala_proyeccion').emit('pantallaEstado', 'VOTACION_ABIERTA');
@@ -74,6 +80,7 @@ io.on('connection', (socket) => {
         if (!votosRecibidos[idVotado]) votosRecibidos[idVotado] = 0;
         votosRecibidos[idVotado]++;
         io.to('sala_proyeccion').emit('actualizarVotosProyeccion', votosRecibidos);
+        
         const totalVotos = Object.values(votosRecibidos).reduce((a, b) => a + b, 0);
         if (totalVotos >= jugadores.filter(j => !j.eliminado).length) procesarVotacion();
     });
@@ -88,11 +95,11 @@ io.on('connection', (socket) => {
         const fueImpostor = expulsado && expulsado.rol === "IMPOSTOR";
         
         if (fueImpostor) {
-            io.emit('resultadoVotacion', { mensaje: "CIUDADANOS GANAN", terminar: true, palabraReal: palabraActual });
-            io.to('sala_proyeccion').emit('resultadoFinalProyeccion', { titulo: "ATRAPADO", sub: `${expulsado.nombre} era el Impostor`, palabra: palabraActual, color: "#00e676" });
+            io.emit('resultadoVotacion', { mensaje: "¡CIUDADANOS GANAN!", terminar: true, palabraReal: palabraActual });
+            io.to('sala_proyeccion').emit('resultadoFinalProyeccion', { titulo: "¡ATRAPADO!", sub: `${expulsado.nombre} era el Impostor`, palabra: palabraActual, color: "#00e676" });
         } else if (rondaActual >= 2) {
-            io.emit('resultadoVotacion', { mensaje: "EL IMPOSTOR GANA", terminar: true, palabraReal: palabraActual });
-            io.to('sala_proyeccion').emit('resultadoFinalProyeccion', { titulo: "IMPOSTOR GANA", sub: "No lo descubrieron", palabra: palabraActual, color: "#ff4444" });
+            io.emit('resultadoVotacion', { mensaje: "¡EL IMPOSTOR GANA!", terminar: true, palabraReal: palabraActual });
+            io.to('sala_proyeccion').emit('resultadoFinalProyeccion', { titulo: "¡EL IMPOSTOR GANA!", sub: "No lograron descubrirlo", palabra: palabraActual, color: "#ff4444" });
         } else {
             rondaActual++; votosRecibidos = {};
             io.emit('resultadoVotacion', { mensaje: "Era Inocente...", terminar: false });
@@ -104,6 +111,7 @@ io.on('connection', (socket) => {
     socket.on('disconnect', () => { 
         jugadores = jugadores.filter(j => j.id !== socket.id); 
         io.emit('actualizarLista', jugadores.length);
+        io.to('sala_proyeccion').emit('listaInicialProyeccion', jugadores);
     });
 });
 server.listen(process.env.PORT || 3000);
