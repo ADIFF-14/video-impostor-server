@@ -2,12 +2,16 @@ const socket = io();
 let esAdmin = false;
 
 socket.on('vistas', (tipo) => {
-    if (tipo === 'ADMIN') {
+    if (tipo === 'PROYECTOR') {
+        // El proyector no hace nada en este archivo
+    } else if (tipo === 'ADMIN') {
         esAdmin = true;
         document.getElementById("admin-panel").style.display = "block";
         document.getElementById("adminBtn").style.display = "block";
+        showScreen("waiting");
+    } else {
+        showScreen("waiting");
     }
-    showScreen("waiting");
 });
 
 function entrarJuego() {
@@ -19,21 +23,21 @@ socket.on('infoSecretaAdmin', (data) => {
     if (esAdmin) {
         const imp = data.jugadores.find(j => j.rol === "IMPOSTOR");
         document.getElementById("admin-info").innerText = `IMP: ${imp.nombre} | FRRASE: ${data.palabra}`;
-        document.getElementById("btn-debate-fijo").style.display = "block";
+        document.getElementById("btn-debate").style.display = "block";
         document.getElementById("btn-forzar").style.display = "none";
         document.getElementById("btn-reiniciar").style.display = "none";
     }
 });
 
 socket.on('recibirRol', (data) => {
-    document.getElementById("roleTitle").innerText = data.rol === "IMPOSTOR" ? "ERES EL IMPOSTOR" : "TU FRASE ES:";
-    document.getElementById("roleText").innerText = data.rol === "IMPOSTOR" ? "Descubre la frase secreta" : data.palabra;
+    document.getElementById("roleTitle").innerText = (data.rol === "IMPOSTOR") ? "ERES EL IMPOSTOR" : "TU FRASE ES:";
+    document.getElementById("roleText").innerText = (data.rol === "IMPOSTOR") ? "Descubre la palabra secreta" : data.palabra;
     showScreen("role");
 });
 
 socket.on('cambioDeTurno', (data) => {
     if (esAdmin) {
-        document.getElementById("btn-debate-fijo").style.display = "none";
+        document.getElementById("btn-debate").style.display = "none";
         document.getElementById("btn-forzar").style.display = "block";
     }
     showScreen("turnScreen");
@@ -45,7 +49,7 @@ socket.on('faseVotacion', (vivos) => {
     if (esAdmin) document.getElementById("btn-forzar").style.display = "none";
     showScreen("end");
     const lista = document.getElementById("lista-votacion");
-    lista.innerHTML = esAdmin ? "<p style='color:white'>Esperando votos...</p>" : "";
+    lista.innerHTML = esAdmin ? "<p style='color:white'>Esperando votos de los hermanos...</p>" : "";
     if (!esAdmin) {
         vivos.forEach(j => {
             if (j.id !== socket.id) {
@@ -74,7 +78,9 @@ function showScreen(id) {
     const t = document.getElementById(id);
     if(t) t.classList.add("active");
 }
+
 socket.on('actualizarLista', (n) => { if(document.getElementById("count")) document.getElementById("count").innerText = n; });
+
 
 
 
