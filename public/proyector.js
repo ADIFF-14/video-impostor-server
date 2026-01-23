@@ -1,73 +1,34 @@
 const socket = io();
-
-// Indicar al servidor que somos el proyector
 socket.emit('unirse', { nombre: 'proyector' });
 
-socket.on('listaInicialProyeccion', (jugadores) => {
-    const contenedor = document.getElementById('marcador-votos');
-    contenedor.innerHTML = "";
-    jugadores.forEach(j => {
-        if (!j.eliminado) {
-            const div = document.createElement('div');
-            div.className = 'tarjeta';
-            div.id = `tarjeta-${j.id}`;
-            div.innerHTML = `
-                <div class="nombre">${j.nombre}</div>
-                <div class="puntos" id="votos-${j.id}">0</div>
-            `;
-            contenedor.appendChild(div);
-        }
-    });
-});
+const container = document.body;
 
 socket.on('pantallaEstado', (estado) => {
     if (estado === 'JUEGO_INICIADO') {
-        document.getElementById('pantalla-espera').style.display = 'none';
-        document.getElementById('juego-activo').style.display = 'block';
-        document.getElementById('marcador-votos').style.display = 'none';
-        document.getElementById('resultado-final').style.display = 'none';
+        renderProyector("ATENCIÓN", "LEAN SU FRASE", "#00e676");
     }
     if (estado === 'VOTACION_ABIERTA') {
-        document.getElementById('status-msg').innerText = "¡VOTEN EN SUS CELULARES!";
-        document.getElementById('speaker-gigante').style.display = 'none';
-        document.getElementById('marcador-votos').style.display = 'flex';
+        renderProyector("MOMENTO DE", "VOTAR", "#ff9800");
     }
 });
 
 socket.on('turnoEnPantalla', (nombre) => {
-    document.getElementById('status-msg').innerText = "En el turno de hablar:";
-    document.getElementById('speaker-gigante').style.display = 'block';
-    document.getElementById('speaker-gigante').innerText = nombre;
-    document.getElementById('marcador-votos').style.display = 'none';
-});
-
-socket.on('actualizarVotosProyeccion', (conteo) => {
-    for (let id in conteo) {
-        const elVoto = document.getElementById(`votos-${id}`);
-        const elTarjeta = document.getElementById(`tarjeta-${id}`);
-        if (elVoto) {
-            elVoto.innerText = conteo[id];
-            // Animación cuando sube un voto
-            elTarjeta.classList.add('voto-anim');
-            setTimeout(() => elTarjeta.classList.remove('voto-anim'), 300);
-        }
-    }
+    renderProyector("TIENE LA PALABRA:", nombre, "#00e676");
 });
 
 socket.on('resultadoFinalProyeccion', (data) => {
-    const panel = document.getElementById('resultado-final');
-    const titulo = document.getElementById('res-titulo');
-    const sub = document.getElementById('res-sub');
-
-    panel.style.display = 'flex';
+    let html = `<h1 style="font-size:5rem; color:${data.temporal ? '#ff4444' : '#00e676'}">${data.titulo}</h1>`;
+    html += `<h2 style="font-size:3rem; opacity:0.8">${data.sub}</h2>`;
+    if(data.palabra) html += `<h1 style="font-size:4rem; margin-top:40px">FRASE: ${data.palabra}</h1>`;
     
-    if (data.esImpostor) {
-        titulo.innerText = "¡ATRAPADO!";
-        titulo.style.color = "#00e676";
-        sub.innerText = `${data.expulsado} era el Impostor`;
-    } else {
-        titulo.innerText = "ERA INOCENTE";
-        titulo.style.color = "#ff4444";
-        sub.innerText = `${data.expulsado} no era el Impostor`;
-    }
+    document.body.innerHTML = `<div style="text-align:center; width:100%">${html}</div>`;
 });
+
+function renderProyector(sub, main, color) {
+    document.body.innerHTML = `
+        <div style="text-align:center; width:100%">
+            <p style="font-size:3rem; text-transform:uppercase; margin:0">${sub}</p>
+            <h1 style="font-size:8rem; color:${color}; background:#111; padding:40px; border-radius:40px; border:10px solid ${color}; margin:20px">${main}</h1>
+        </div>
+    `;
+}
