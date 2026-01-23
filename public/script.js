@@ -1,85 +1,70 @@
 const socket = io();
 let esAdmin = false;
 
-socket.on('vistas', (tipo) => {
-    if (tipo === 'PROYECTOR') {
-        // El proyector no hace nada en este archivo
-    } else if (tipo === 'ADMIN') {
+function entrar() { const n = document.getElementById("u").value.trim(); if(n) socket.emit('unirse', { nombre: n }); }
+
+socket.on('vistas', (v) => {
+    if(v === 'ADMIN') {
         esAdmin = true;
-        document.getElementById("admin-panel").style.display = "block";
+        document.getElementById("admin-p").style.display = "block";
         document.getElementById("adminBtn").style.display = "block";
-        showScreen("waiting");
-    } else {
-        showScreen("waiting");
+    }
+    show("waiting");
+});
+
+socket.on('infoSecretaAdmin', (d) => {
+    if(esAdmin) {
+        const imp = d.jugadores.find(j => j.rol === "IMPOSTOR");
+        document.getElementById("adm-info").innerText = `IMP: ${imp.nombre} | FRRASE: ${d.palabra}`;
+        document.getElementById("b-deb").style.display = "block";
+        document.getElementById("b-for").style.display = "none";
+        document.getElementById("b-res").style.display = "none";
     }
 });
 
-function entrarJuego() {
-    const n = document.getElementById("userName").value.trim();
-    if (n) socket.emit('unirse', { nombre: n });
-}
-
-socket.on('infoSecretaAdmin', (data) => {
-    if (esAdmin) {
-        const imp = data.jugadores.find(j => j.rol === "IMPOSTOR");
-        document.getElementById("admin-info").innerText = `IMP: ${imp.nombre} | FRRASE: ${data.palabra}`;
-        document.getElementById("btn-debate").style.display = "block";
-        document.getElementById("btn-forzar").style.display = "none";
-        document.getElementById("btn-reiniciar").style.display = "none";
-    }
+socket.on('recibirRol', (d) => {
+    document.getElementById("rT").innerText = d.rol === "IMPOSTOR" ? "ERES EL IMPOSTOR" : "TU FRASE ES:";
+    document.getElementById("rX").innerText = d.rol === "IMPOSTOR" ? "Descubre la palabra" : d.palabra;
+    show("role");
 });
 
-socket.on('recibirRol', (data) => {
-    document.getElementById("roleTitle").innerText = (data.rol === "IMPOSTOR") ? "ERES EL IMPOSTOR" : "TU FRASE ES:";
-    document.getElementById("roleText").innerText = (data.rol === "IMPOSTOR") ? "Descubre la palabra secreta" : data.palabra;
-    showScreen("role");
-});
-
-socket.on('cambioDeTurno', (data) => {
-    if (esAdmin) {
-        document.getElementById("btn-debate").style.display = "none";
-        document.getElementById("btn-forzar").style.display = "block";
-    }
-    showScreen("turnScreen");
-    document.getElementById("currentSpeakerName").innerText = data.nombre;
-    document.getElementById("btnFinalizarTurno").style.display = (socket.id === data.idSocket) ? "block" : "none";
+socket.on('cambioDeTurno', (d) => {
+    if(esAdmin) { document.getElementById("b-deb").style.display="none"; document.getElementById("b-for").style.display="block"; }
+    show("turn");
+    document.getElementById("curr").innerText = d.nombre;
+    document.getElementById("b-fin").style.display = (socket.id === d.idSocket) ? "block" : "none";
 });
 
 socket.on('faseVotacion', (vivos) => {
-    if (esAdmin) document.getElementById("btn-forzar").style.display = "none";
-    showScreen("end");
-    const lista = document.getElementById("lista-votacion");
-    lista.innerHTML = esAdmin ? "<p style='color:white'>Esperando votos de los hermanos...</p>" : "";
-    if (!esAdmin) {
+    if(esAdmin) document.getElementById("b-for").style.display="none";
+    show("end");
+    const l = document.getElementById("l-v"); l.innerHTML = esAdmin ? "Esperando votos..." : "";
+    if(!esAdmin) {
         vivos.forEach(j => {
-            if (j.id !== socket.id) {
-                const b = document.createElement("button");
-                b.className = "btn-voto"; b.innerText = j.nombre;
-                b.onclick = () => { socket.emit('votarJugador', j.id); lista.innerHTML = "Voto enviado"; };
-                lista.appendChild(b);
+            if(j.id !== socket.id) {
+                const b = document.createElement("button"); b.className="btn-voto"; b.innerText=j.nombre;
+                b.onclick = () => { socket.emit('votarJugador', j.id); l.innerHTML="Voto enviado"; };
+                l.appendChild(b);
             }
         });
     }
 });
 
 socket.on('resultadoVotacion', (res) => {
-    showScreen("result");
-    document.getElementById("texto-res").innerText = res.mensaje;
-    if (res.terminar) {
-        document.getElementById("texto-palabra").innerText = "LA FRRASE ERA: " + res.palabraReal;
-        if (esAdmin) document.getElementById("btn-reiniciar").style.display = "block";
-    } else {
-        document.getElementById("texto-palabra").innerText = "Siguiente ronda en 8 segundos...";
-    }
+    show("result");
+    document.getElementById("t-r").innerText = res.mensaje;
+    if(res.terminar) {
+        document.getElementById("t-p").innerText = "FRASE: " + res.palabraReal;
+        if(esAdmin) document.getElementById("b-res").style.display="block";
+    } else { document.getElementById("t-p").innerText = "Siguiente ronda en breve..."; }
 });
 
-function showScreen(id) {
+function show(id) {
     document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-    const t = document.getElementById(id);
-    if(t) t.classList.add("active");
+    document.getElementById(id).classList.add("active");
 }
-
 socket.on('actualizarLista', (n) => { if(document.getElementById("count")) document.getElementById("count").innerText = n; });
+
 
 
 
