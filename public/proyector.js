@@ -15,17 +15,16 @@ socket.on('pantallaEstado', (estado) => {
         document.getElementById('vote-grid').innerHTML = "";
     }
     if (estado === 'VOTACION_ABIERTA') {
-        document.getElementById('turno-header').innerText = "TURNO DE";
-        document.getElementById('main-val').innerText = "VOTAR";
+        document.getElementById('turno-header').innerText = "SISTEMA DE";
+        document.getElementById('main-val').innerText = "VOTACIÓN";
         renderGrid({});
     }
 });
 
 socket.on('turnoEnPantalla', (nombre) => {
     document.getElementById('overlay').style.display = 'none';
-    document.getElementById('turno-header').innerText = "TURNO DE";
+    document.getElementById('turno-header').innerText = "HABLANDO:";
     document.getElementById('main-val').innerText = nombre;
-    document.getElementById('vote-grid').innerHTML = "";
 });
 
 socket.on('actualizarVotosProyeccion', (votos) => renderGrid(votos));
@@ -34,9 +33,9 @@ socket.on('resultadoFinalProyeccion', (data) => {
     const o = document.getElementById('overlay');
     o.style.display = 'flex';
     document.getElementById('o-titulo').innerText = data.titulo;
-    document.getElementById('o-titulo').style.color = data.color || "#00e676";
+    document.getElementById('o-titulo').style.color = data.color;
     document.getElementById('o-sub').innerText = data.sub;
-    document.getElementById('o-palabra').innerText = data.palabra ? "FRRASE: " + data.palabra : "";
+    document.getElementById('o-palabra').innerText = data.palabra ? "LA FRASE ERA: " + data.palabra : "";
     if (data.temporal) setTimeout(() => { o.style.display = 'none'; }, 8000);
 });
 
