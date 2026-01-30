@@ -6,22 +6,21 @@
     <script src="/socket.io/socket.io.js"></script>
     <style>
         body { margin: 0; background: #000; color: white; font-family: sans-serif; text-align: center; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
-        #header { background: #00e676; color: black; padding: 20px; font-size: 3rem; font-weight: bold; text-transform: uppercase; }
-        #main-val { font-size: 7rem; margin: 40px 0; font-weight: 900; }
-        #vote-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; padding: 20px; }
-        .v-card { background: #111; border: 3px solid #333; padding: 20px; border-radius: 15px; min-width: 200px; }
-        .v-count { font-size: 5rem; color: #00e676; font-weight: bold; }
+        #header { background: #00e676; color: black; padding: 20px; font-size: 3rem; font-weight: bold; }
+        #main-info { font-size: 8rem; margin: 40px 0; font-weight: 900; }
+        #grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; padding: 20px; }
+        .card { background: #111; border: 3px solid #333; border-radius: 15px; padding: 20px; min-width: 200px; }
+        .v-count { font-size: 5rem; color: #00e676; font-weight: 900; display: none; }
         #overlay { position: fixed; inset: 0; background: black; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
     </style>
 </head>
 <body>
-    <div id="header">ESTADO</div>
-    <div id="main-val">ESPERANDO QUE INICIE EL JUEGO</div>
-    <div id="vote-grid"></div>
-
+    <div id="header">ESPERANDO INICIO...</div>
+    <div id="main-info">IMPOSTOR</div>
+    <div id="grid"></div>
     <div id="overlay">
-        <h1 id="o-t" style="font-size: 8rem; margin: 0;"></h1>
-        <h2 id="o-s" style="font-size: 4rem; margin: 20px 0;"></h2>
+        <h1 id="o-t" style="font-size: 8rem; margin:0;"></h1>
+        <h2 id="o-s" style="font-size: 4rem; margin: 20px 0; opacity: 0.8;"></h2>
         <h1 id="o-p" style="font-size: 5rem; color: #ff9800;"></h1>
     </div>
     <script src="proyector.js"></script>
