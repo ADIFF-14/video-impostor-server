@@ -1,100 +1,137 @@
 const socket = io();
 let esAdmin = false;
 
-socket.on('vistas', (tipo) => {
-    if (tipo === 'PROYECTOR') window.location.href = "proyector.html";
-
-    if (tipo === 'ADMIN') {
-        esAdmin = true;
-        document.getElementById("admin-panel").style.display = "block";
-        document.getElementById("adminBtn").style.display = "block";
-    }
-    showScreen("waiting");
-});
-
+/* =========================
+   ENTRAR
+========================= */
 function entrarJuego() {
-    const n = document.getElementById("userName").value.trim();
-    if (n) socket.emit('unirse', { nombre: n });
+  const nombre = document.getElementById("userName").value.trim();
+  if (nombre) socket.emit("unirse", { nombre });
 }
 
-socket.on('infoSecretaAdmin', (data) => {
-    if (esAdmin) {
-        const imp = data.jugadores.find(j => j.rol === "IMPOSTOR");
-        document.getElementById("admin-info").innerText =
-          `IMPOSTOR: ${imp.nombre} | PALABRA: ${data.palabra}`;
+/* =========================
+   VISTA SEGÚN ROL
+========================= */
+socket.on("vistas", (tipo) => {
+  if (tipo === "PROYECTOR") {
+    window.location.href = "proyector.html";
+    return;
+  }
 
-        document.getElementById("btn-debate-fijo").style.display = "block";
-    }
+  if (tipo === "ADMIN") {
+    esAdmin = true;
+    document.getElementById("admin-panel").style.display = "block";
+  }
+
+  showScreen("waiting");
 });
 
-socket.on('recibirRol', (data) => {
-    if (data.rol === "IMPOSTOR") {
-        document.getElementById("roleTitle").innerText = "ERES EL IMPOSTOR";
-        document.getElementById("roleText").innerText =
-          "Descubre la frase secreta de los demás";
-    } else {
-        document.getElementById("roleTitle").innerText = "TU FRASE ES:";
-        document.getElementById("roleText").innerText = data.palabra;
-    }
-    showScreen("role");
+/* =========================
+   CONTADOR
+========================= */
+socket.on("actualizarLista", (n) => {
+  document.getElementById("count").innerText = n;
 });
 
-socket.on('cambioDeTurno', (data) => {
-    if (esAdmin) document.getElementById("btn-debate-fijo").style.display = "none";
+/* =========================
+   BOTONES ADMIN
+========================= */
+document.getElementById("btn-iniciar").onclick = () => {
+  socket.emit("iniciarRonda");
+  document.getElementById("btn-debate").style.display = "block";
+};
 
-    showScreen("turnScreen");
-    document.getElementById("currentSpeakerName").innerText = data.nombre;
-    document.getElementById("btnFinalizarTurno").style.display =
-      (socket.id === data.idSocket) ? "block" : "none";
+document.getElementById("btn-debate").onclick = () => {
+  socket.emit("empezarDebateOficial");
+};
+
+/* =========================
+   ROLES
+========================= */
+socket.on("recibirRol", (data) => {
+  showScreen("turnScreen");
+  if (data.rol === "IMPOSTOR") {
+    document.getElementById("currentSpeakerName").innerText =
+      "ERES EL IMPOSTOR";
+  } else {
+    document.getElementById("currentSpeakerName").innerText =
+      "TU FRASE ES: " + data.palabra;
+  }
 });
 
-socket.on('faseVotacion', (vivos) => {
-    showScreen("end");
-    const lista = document.getElementById("lista-votacion");
-    lista.innerHTML = esAdmin ? "Votación en curso..." : "";
+/* =========================
+   TURNOS
+========================= */
+socket.on("cambioDeTurno", (data) => {
+  showScreen("turnScreen");
+  document.getElementById("currentSpeakerName").innerText = data.nombre;
 
-    if (!esAdmin) {
-        vivos.forEach(j => {
-            if (j.id !== socket.id) {
-                const b = document.createElement("button");
-                b.className = "btn-big";
-                b.style.background = "#333";
-                b.style.color = "white";
-                b.innerText = j.nombre;
-                b.onclick = () => {
-                    socket.emit('votarJugador', j.id);
-                    lista.innerHTML = "Voto enviado";
-                };
-                lista.appendChild(b);
-            }
-        });
-    }
+  document.getElementById("btnFinalizarTurno").style.display =
+    socket.id === data.idSocket ? "block" : "none";
 });
 
-socket.on('resultadoVotacion', (res) => {
-    showScreen("result");
-    document.getElementById("texto-res").innerText = res.mensaje;
+document.getElementById("btnFinalizarTurno").onclick = () => {
+  socket.emit("finalizarMiTurno");
+};
 
-    if (res.palabraReal) {
-        document.getElementById("texto-palabra").innerText =
-          "La frase era: " + res.palabraReal;
-    }
+/* =========================
+   VOTACIÓN
+========================= */
+socket.on("faseVotacion", (jugadores) => {
+  showScreen("end");
+  const lista = document.getElementById("lista-votacion");
+  lista.innerHTML = "";
 
-    // ✅ EL ADMIN SIEMPRE PUEDE INICIAR NUEVA PARTIDA
-    if (esAdmin) {
-        document.getElementById("btn-reiniciar").style.display = "block";
+  if (esAdmin) {
+    lista.innerText = "Votación en curso...";
+    return;
+  }
+
+  jugadores.forEach(j => {
+    if (j.id !== socket.id) {
+      const b = document.createElement("button");
+      b.className = "btn-big";
+      b.innerText = j.nombre;
+      b.onclick = () => {
+        socket.emit("votarJugador", j.id);
+        lista.innerHTML = "Voto enviado";
+      };
+      lista.appendChild(b);
     }
+  });
 });
 
+/* =========================
+   RESULTADO
+========================= */
+socket.on("resultadoVotacion", (res) => {
+  showScreen("result");
+  document.getElementById("texto-res").innerText = res.mensaje || "Resultado";
+
+  if (res.palabraReal) {
+    document.getElementById("texto-palabra").innerText =
+      "La frase era: " + res.palabraReal;
+  }
+
+  if (esAdmin) {
+    document.getElementById("btn-reiniciar").style.display = "block";
+  }
+});
+
+document.getElementById("btn-reiniciar").onclick = () => {
+  socket.emit("iniciarRonda");
+};
+
+/* =========================
+   UTILIDAD
+========================= */
 function showScreen(id) {
-    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-    const target = document.getElementById(id);
-    if (target) target.classList.add("active");
+  document.querySelectorAll(".screen")
+    .forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
 }
 
-socket.on('actualizarLista', (n) => {
-    document.getElementById("count").innerText = n;
-});
+
 
 
 
