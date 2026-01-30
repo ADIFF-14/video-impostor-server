@@ -59,6 +59,14 @@ socket.on("resultadoFinalProyeccion", (data) => {
     document.getElementById("final-sub").innerText =
       `${data.expulsado} NO ERA EL IMPOSTOR`;
   }
+
+  // ⏱️ OCULTAR RESULTADO Y REINICIAR PANTALLA
+  setTimeout(() => {
+    overlay.style.display = "none";
+    document.getElementById("header").innerText = "ESPERANDO JUEGO";
+    document.getElementById("main").innerText = "IMPOSTOR";
+    document.getElementById("grid").innerHTML = "";
+  }, 8000);
 });
 
 /* =========================
@@ -80,6 +88,7 @@ function renderGrid(votos) {
     }
   });
 }
+
 
 
 
