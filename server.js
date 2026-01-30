@@ -1,16 +1,12 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
-
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
 app.use(express.static('public'));
 
-/* =========================
-   ESTADO GLOBAL
-========================= */
 let jugadores = [];
 let ordenHablar = [];
 let indiceTurno = 0;
@@ -19,7 +15,8 @@ let votosRecibidos = {};
 let rondaActual = 1;
 
 /* =========================
-   FRASES BÍBLICAS
+   BANCO DE FRASES BÍBLICAS
+   (ÚNICO CAMBIO)
 ========================= */
 const palabras = [
   "Biblia",
@@ -56,25 +53,19 @@ function mezclar(array) {
   return array;
 }
 
-/* =========================
-   SOCKETS
-========================= */
 io.on('connection', (socket) => {
 
-  /* ----------- ENTRAR ----------- */
   socket.on('unirse', (datos) => {
     const nombre = datos.nombre.toLowerCase().trim();
 
     if (nombre === 'proyector') {
       socket.join('sala_proyeccion');
-      socket.emit('vistas', 'PROYECTOR');
-      return;
+      return socket.emit('vistas', 'PROYECTOR');
     }
 
     if (nombre === 'anderson') {
       socket.join('sala_admin');
-      socket.emit('vistas', 'ADMIN');
-      return;
+      return socket.emit('vistas', 'ADMIN');
     }
 
     jugadores.push({
@@ -89,7 +80,6 @@ io.on('connection', (socket) => {
     io.to('sala_proyeccion').emit('listaInicialProyeccion', jugadores);
   });
 
-  /* ----------- INICIAR PARTIDA ----------- */
   socket.on('iniciarRonda', () => {
     if (jugadores.length < 3) return;
 
@@ -118,10 +108,14 @@ io.on('connection', (socket) => {
       }
     });
 
+    io.to('sala_admin').emit('infoSecretaAdmin', {
+      jugadores,
+      palabra: palabraActual
+    });
+
     io.to('sala_proyeccion').emit('pantallaEstado', 'JUEGO_INICIADO');
   });
 
-  /* ----------- DEBATE ----------- */
   socket.on('empezarDebateOficial', () => {
     indiceTurno = 0;
     const vivos = jugadores.filter(j => !j.eliminado);
@@ -148,7 +142,6 @@ io.on('connection', (socket) => {
     }
   }
 
-  /* ----------- VOTAR ----------- */
   socket.on('votarJugador', (idVotado) => {
     if (!votosRecibidos[idVotado]) votosRecibidos[idVotado] = [];
     votosRecibidos[idVotado].push(socket.id);
@@ -168,7 +161,6 @@ io.on('connection', (socket) => {
     }
   });
 
-  /* ----------- RESULTADO ----------- */
   function procesarVotacion() {
     let expId = null;
     let max = 0;
@@ -212,17 +204,8 @@ io.on('connection', (socket) => {
       return;
     }
 
-    const impostor = jugadores.find(j => j.rol === "IMPOSTOR");
-
-    io.to('sala_proyeccion').emit('resultadoFinalProyeccion', {
-      expulsado: impostor.nombre,
-      esImpostor: true,
-      frase: palabraActual,
-      ganoImpostor: true
-    });
-
     io.emit('resultadoVotacion', {
-      mensaje: " El impostor ganó",
+      mensaje: "😈 El impostor ganó",
       palabraReal: palabraActual
     });
   }
