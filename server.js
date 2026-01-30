@@ -14,7 +14,7 @@ let palabraActual = "";
 let votosRecibidos = {}; 
 let rondaActual = 1;
 
-const palabrasBiblicas = ["El Arca de Noé", "Los Diez Mandamientos", "El Mar Rojo", "La Zarza Ardiendo", "David y Goliat", "El Jardín del Edén", "El Maná", "La Torre de Babel", "La Túnica de José", "El Pez de Jonás", "Las Murallas de Jericó", "Sansón y Dalila", "El Rey Salomón", "La Reina Ester", "La Estrella de Belén", "El Pesebre", "El Bautismo", "El Río Jordán", "La Última Cena", "La Cruz", "La Resurrección", "La Armadura de Dios"];
+const frasesBiblicas = ["El Arca de Noé", "Los Diez Mandamientos", "El Mar Rojo", "La Zarza Ardiendo", "David y Goliat", "El Jardín del Edén", "El Maná", "La Torre de Babel", "La Túnica de José", "El Pez de Jonás", "Las Murallas de Jericó", "La Estrella de Belén", "La Última Cena", "La Cruz", "La Resurrección"];
 
 io.on('connection', (socket) => {
     socket.on('unirse', (datos) => {
@@ -25,8 +25,7 @@ io.on('connection', (socket) => {
         }
         if (nombre === 'anderson') {
             socket.join('sala_admin');
-            socket.emit('vistas', 'ADMIN');
-            return;
+            return socket.emit('vistas', 'ADMIN');
         }
         const nuevo = { id: socket.id, nombre: datos.nombre, eliminado: false, rol: "" };
         jugadores.push(nuevo);
@@ -40,14 +39,13 @@ io.on('connection', (socket) => {
         jugadores.forEach(j => { j.eliminado = false; j.rol = "CIUDADANO"; });
         const impIndex = Math.floor(Math.random() * jugadores.length);
         jugadores[impIndex].rol = "IMPOSTOR";
-        palabraActual = palabrasBiblicas[Math.floor(Math.random() * palabrasBiblicas.length)];
+        palabraActual = frasesBiblicas[Math.floor(Math.random() * frasesBiblicas.length)];
         
         jugadores.forEach(j => {
             io.to(j.id).emit('recibirRol', j.rol === "IMPOSTOR" ? { rol: "IMPOSTOR" } : { rol: "CIUDADANO", palabra: palabraActual });
         });
         io.to('sala_admin').emit('infoSecretaAdmin', { jugadores, palabra: palabraActual });
         io.to('sala_proyeccion').emit('pantallaEstado', 'JUEGO_INICIADO');
-        io.to('sala_proyeccion').emit('listaInicialProyeccion', jugadores);
     });
 
     socket.on('empezarDebateOficial', () => iniciarDebate());
@@ -64,9 +62,9 @@ io.on('connection', (socket) => {
 
     function notificarTurno() {
         if (indiceTurno < ordenHablar.length) {
-            const turnoData = { nombre: ordenHablar[indiceTurno].nombre, idSocket: ordenHablar[indiceTurno].id };
-            io.emit('cambioDeTurno', turnoData);
-            io.to('sala_proyeccion').emit('turnoEnPantalla', turnoData.nombre);
+            const turno = { nombre: ordenHablar[indiceTurno].nombre, idSocket: ordenHablar[indiceTurno].id, lista: jugadores };
+            io.emit('cambioDeTurno', turno);
+            io.to('sala_proyeccion').emit('turnoEnPantalla', ordenHablar[indiceTurno].nombre);
         } else {
             io.emit('faseVotacion', jugadores.filter(j => !j.eliminado));
             io.to('sala_proyeccion').emit('pantallaEstado', 'VOTACION_ABIERTA');
@@ -76,30 +74,29 @@ io.on('connection', (socket) => {
     socket.on('votarJugador', (idVotado) => {
         votosRecibidos[idVotado] = (votosRecibidos[idVotado] || 0) + 1;
         io.to('sala_proyeccion').emit('actualizarVotosProyeccion', votosRecibidos);
-        const totalVotos = Object.values(votosRecibidos).reduce((a, b) => a + b, 0);
-        if (totalVotos >= jugadores.filter(j => !j.eliminado).length) procesarVotacion();
+        if (Object.values(votosRecibidos).reduce((a,b)=>a+b,0) >= jugadores.filter(j=>!j.eliminado).length) {
+            procesarVotacion();
+        }
     });
 
     function procesarVotacion() {
         let max = -1, expId = null;
-        Object.keys(votosRecibidos).forEach(id => {
-            if (votosRecibidos[id] > max) { max = votosRecibidos[id]; expId = id; }
-        });
-        const expulsado = jugadores.find(j => j.id === expId);
-        if (expulsado) expulsado.eliminado = true;
-        const fueImpostor = expulsado && expulsado.rol === "IMPOSTOR";
-        
-        if (fueImpostor) {
-            io.emit('resultadoVotacion', { mensaje: "CIUDADANOS GANAN", terminar: true, palabraReal: palabraActual });
-            io.to('sala_proyeccion').emit('resultadoFinalProyeccion', { titulo: "¡TE ATRAPAMOS!", sub: `${expulsado.nombre} era el Impostor`, palabra: palabraActual, color: "#00e676" });
+        Object.keys(votosRecibidos).forEach(id => { if (votosRecibidos[id] > max) { max = votosRecibidos[id]; expId = id; } });
+        const exp = jugadores.find(j => j.id === expId);
+        if (exp) exp.eliminado = true;
+        const esImp = exp && exp.rol === "IMPOSTOR";
+
+        if (esImp) {
+            io.emit('resultadoVotacion', { mensaje: "¡CIUDADANOS GANAN!", terminar: true, palabraReal: palabraActual });
+            io.to('sala_proyeccion').emit('resultadoFinalProyeccion', { titulo: "¡TE ATRAPAMOS!", sub: `${exp.nombre} ERA EL IMPOSTOR`, palabra: palabraActual, color: "#00e676" });
         } else if (rondaActual >= 2) {
-            const imp = jugadores.find(j => j.rol === "IMPOSTOR");
-            io.emit('resultadoVotacion', { mensaje: "EL IMPOSTOR GANA", terminar: true, palabraReal: palabraActual });
-            io.to('sala_proyeccion').emit('resultadoFinalProyeccion', { titulo: "¡EL IMPOSTOR GANÓ!", sub: `No lo descubrieron. Era ${imp ? imp.nombre : ''}`, palabra: palabraActual, color: "#ff4444" });
+            const impActual = jugadores.find(j => j.rol === "IMPOSTOR");
+            io.emit('resultadoVotacion', { mensaje: "¡EL IMPOSTOR GANA!", terminar: true, palabraReal: palabraActual });
+            io.to('sala_proyeccion').emit('resultadoFinalProyeccion', { titulo: "¡EL IMPOSTOR GANÓ!", sub: `No lo descubrieron. Era: ${impActual.nombre}`, palabra: palabraActual, color: "#ff4444" });
         } else {
             rondaActual++; votosRecibidos = {};
-            io.emit('resultadoVotacion', { mensaje: "Era Inocente...", terminar: false });
-            io.to('sala_proyeccion').emit('resultadoFinalProyeccion', { titulo: "INOCENTE", sub: `${expulsado ? expulsado.nombre : 'Alguien'} no era el impostor`, temporal: true, color: "#ff4444" });
+            io.emit('resultadoVotacion', { mensaje: "Inocente expulsado...", terminar: false });
+            io.to('sala_proyeccion').emit('resultadoFinalProyeccion', { titulo: "INOCENTE", sub: `${exp.nombre} no era el impostor`, temporal: true, color: "#ff4444" });
             setTimeout(() => { iniciarDebate(); }, 8000);
         }
     }
