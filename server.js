@@ -14,15 +14,7 @@ let palabraActual = "";
 let votosRecibidos = {}; 
 let rondaActual = 1;
 
-const palabras = ["Pizza", "Avión", "WhatsApp", "Netflix", "Fútbol", "Cine", "Playa", "Gato", "Reloj", "Bicicleta", "Hamburguesa", "Internet", "Instagram", "Parque", "Café", "Escuela", "Navidad", "Música", "Helado", "Libro", "Carro", "Perro", "Sol", "Trabajo", "Viaje", "Tacos", "Guitarra", "Hospital", "Cámara", "Luna", "Dinero", "Piscina", "Televisión", "Dormir", "Bailar", "Fruta", "Chocolate", "YouTube", "Teléfono", "Estudiar", "Policía", "Bombero", "Estadio", "Cerveza", "Sushi", "Zapato", "Verano", "Maleta", "Videojuego"];
-
-function mezclar(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
-    return array;
-}
+const palabrasBiblicas = ["El Arca de Noé", "Los Diez Mandamientos", "El Mar Rojo", "La Zarza Ardiendo", "David y Goliat", "El Jardín del Edén", "El Maná", "La Torre de Babel", "La Túnica de José", "El Pez de Jonás", "Las Murallas de Jericó", "Sansón y Dalila", "El Rey Salomón", "La Reina Ester", "La Estrella de Belén", "El Pesebre", "El Bautismo", "El Río Jordán", "La Última Cena", "La Cruz", "La Resurrección", "La Armadura de Dios"];
 
 io.on('connection', (socket) => {
     socket.on('unirse', (datos) => {
@@ -33,49 +25,48 @@ io.on('connection', (socket) => {
         }
         if (nombre === 'anderson') {
             socket.join('sala_admin');
-            return socket.emit('vistas', 'ADMIN');
+            socket.emit('vistas', 'ADMIN');
+            return;
         }
-        jugadores.push({ id: socket.id, nombre: datos.nombre, eliminado: false, rol: "" });
+        const nuevo = { id: socket.id, nombre: datos.nombre, eliminado: false, rol: "" };
+        jugadores.push(nuevo);
         socket.emit('vistas', 'JUGADOR');
         io.emit('actualizarLista', jugadores.length);
         io.to('sala_proyeccion').emit('listaInicialProyeccion', jugadores);
     });
 
     socket.on('iniciarRonda', () => {
-        if (jugadores.length < 3) return;
-        rondaActual = 1;
-        votosRecibidos = {};
+        rondaActual = 1; votosRecibidos = {};
         jugadores.forEach(j => { j.eliminado = false; j.rol = "CIUDADANO"; });
         const impIndex = Math.floor(Math.random() * jugadores.length);
         jugadores[impIndex].rol = "IMPOSTOR";
-        palabraActual = palabras[Math.floor(Math.random() * palabras.length)];
+        palabraActual = palabrasBiblicas[Math.floor(Math.random() * palabrasBiblicas.length)];
         
-        jugadores.forEach((j) => {
-            const info = (j.rol === "IMPOSTOR") ? { rol: "IMPOSTOR" } : { rol: "CIUDADANO", palabra: palabraActual };
-            io.to(j.id).emit('recibirRol', info);
+        jugadores.forEach(j => {
+            io.to(j.id).emit('recibirRol', j.rol === "IMPOSTOR" ? { rol: "IMPOSTOR" } : { rol: "CIUDADANO", palabra: palabraActual });
         });
         io.to('sala_admin').emit('infoSecretaAdmin', { jugadores, palabra: palabraActual });
         io.to('sala_proyeccion').emit('pantallaEstado', 'JUEGO_INICIADO');
+        io.to('sala_proyeccion').emit('listaInicialProyeccion', jugadores);
     });
 
-    socket.on('empezarDebateOficial', () => {
+    socket.on('empezarDebateOficial', () => iniciarDebate());
+    socket.on('finalizarMiTurno', () => { indiceTurno++; notificarTurno(); });
+    socket.on('adminForzarTurno', () => { indiceTurno++; notificarTurno(); });
+
+    function iniciarDebate() {
         indiceTurno = 0;
         let vivos = jugadores.filter(j => !j.eliminado);
-        ordenHablar = mezclar([...vivos]);
-        if (ordenHablar[0].rol === "IMPOSTOR") ordenHablar.push(ordenHablar.shift());
+        ordenHablar = vivos.sort(() => Math.random() - 0.5);
+        if (ordenHablar[0] && ordenHablar[0].rol === "IMPOSTOR") ordenHablar.push(ordenHablar.shift());
         notificarTurno();
-    });
-
-    socket.on('finalizarMiTurno', () => {
-        indiceTurno++;
-        notificarTurno();
-    });
+    }
 
     function notificarTurno() {
         if (indiceTurno < ordenHablar.length) {
-            const d = { nombre: ordenHablar[indiceTurno].nombre, idSocket: ordenHablar[indiceTurno].id, lista: jugadores };
-            io.emit('cambioDeTurno', d);
-            io.to('sala_proyeccion').emit('turnoEnPantalla', d.nombre);
+            const turnoData = { nombre: ordenHablar[indiceTurno].nombre, idSocket: ordenHablar[indiceTurno].id };
+            io.emit('cambioDeTurno', turnoData);
+            io.to('sala_proyeccion').emit('turnoEnPantalla', turnoData.nombre);
         } else {
             io.emit('faseVotacion', jugadores.filter(j => !j.eliminado));
             io.to('sala_proyeccion').emit('pantallaEstado', 'VOTACION_ABIERTA');
@@ -83,34 +74,34 @@ io.on('connection', (socket) => {
     }
 
     socket.on('votarJugador', (idVotado) => {
-        if (!votosRecibidos[idVotado]) votosRecibidos[idVotado] = [];
-        const votante = jugadores.find(j => j.id === socket.id);
-        if (votante) votosRecibidos[idVotado].push(votante.nombre);
-        
-        const conteo = {};
-        Object.keys(votosRecibidos).forEach(id => { conteo[id] = votosRecibidos[id].length; });
-        io.to('sala_proyeccion').emit('actualizarVotosProyeccion', conteo);
-
-        if (Object.values(votosRecibidos).flat().length >= jugadores.filter(j => !j.eliminado).length) {
-            procesarVotacion();
-        }
+        votosRecibidos[idVotado] = (votosRecibidos[idVotado] || 0) + 1;
+        io.to('sala_proyeccion').emit('actualizarVotosProyeccion', votosRecibidos);
+        const totalVotos = Object.values(votosRecibidos).reduce((a, b) => a + b, 0);
+        if (totalVotos >= jugadores.filter(j => !j.eliminado).length) procesarVotacion();
     });
 
     function procesarVotacion() {
-        let max = 0, expId = null;
+        let max = -1, expId = null;
         Object.keys(votosRecibidos).forEach(id => {
-            if (votosRecibidos[id].length > max) { max = votosRecibidos[id].length; expId = id; }
+            if (votosRecibidos[id] > max) { max = votosRecibidos[id]; expId = id; }
         });
         const expulsado = jugadores.find(j => j.id === expId);
         if (expulsado) expulsado.eliminado = true;
-        io.emit('resultadoVotacion', { 
-            mensaje: "Votación terminada", 
-            terminar: (expulsado && expulsado.rol === "IMPOSTOR") || rondaActual >= 3, 
-            palabraReal: palabraActual 
-        });
-        io.to('sala_proyeccion').emit('resultadoFinalProyeccion', { expulsado: expulsado?.nombre, esImpostor: expulsado?.rol === "IMPOSTOR" });
-        rondaActual++;
-        votosRecibidos = {};
+        const fueImpostor = expulsado && expulsado.rol === "IMPOSTOR";
+        
+        if (fueImpostor) {
+            io.emit('resultadoVotacion', { mensaje: "CIUDADANOS GANAN", terminar: true, palabraReal: palabraActual });
+            io.to('sala_proyeccion').emit('resultadoFinalProyeccion', { titulo: "¡TE ATRAPAMOS!", sub: `${expulsado.nombre} era el Impostor`, palabra: palabraActual, color: "#00e676" });
+        } else if (rondaActual >= 2) {
+            const imp = jugadores.find(j => j.rol === "IMPOSTOR");
+            io.emit('resultadoVotacion', { mensaje: "EL IMPOSTOR GANA", terminar: true, palabraReal: palabraActual });
+            io.to('sala_proyeccion').emit('resultadoFinalProyeccion', { titulo: "¡EL IMPOSTOR GANÓ!", sub: `No lo descubrieron. Era ${imp ? imp.nombre : ''}`, palabra: palabraActual, color: "#ff4444" });
+        } else {
+            rondaActual++; votosRecibidos = {};
+            io.emit('resultadoVotacion', { mensaje: "Era Inocente...", terminar: false });
+            io.to('sala_proyeccion').emit('resultadoFinalProyeccion', { titulo: "INOCENTE", sub: `${expulsado ? expulsado.nombre : 'Alguien'} no era el impostor`, temporal: true, color: "#ff4444" });
+            setTimeout(() => { iniciarDebate(); }, 8000);
+        }
     }
 
     socket.on('disconnect', () => {
@@ -118,5 +109,4 @@ io.on('connection', (socket) => {
         io.emit('actualizarLista', jugadores.length);
     });
 });
-
 server.listen(process.env.PORT || 3000);
