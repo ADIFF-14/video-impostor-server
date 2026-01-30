@@ -179,9 +179,9 @@ io.on('connection', (socket) => {
       return;
     }
 
-    // 😈 IMPOSTOR GANA
+    //  IMPOSTOR GANA
     io.emit('resultadoVotacion', {
-      mensaje: "😈 El impostor ganó",
+      mensaje: " El impostor ganó",
       palabraReal: palabraActual
     });
   }
