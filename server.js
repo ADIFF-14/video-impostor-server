@@ -6,7 +6,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// SERVIR FRONTEND (CRÍTICO)
+// SERVIR FRONTEND
 app.use(express.static("public"));
 
 /* =========================
@@ -16,8 +16,12 @@ let jugadores = [];
 let palabraActual = null;
 let impostorId = null;
 
+let ronda = 1;
+let votos = {};
+let enVotacion = false;
+
 /* =========================
-   FRASES BÍBLICAS (TUS FRASES)
+   FRASES
 ========================= */
 const frases = [
   "Biblia",
@@ -62,7 +66,6 @@ io.on("connection", (socket) => {
 
     const limpio = nombre.toLowerCase().trim();
 
-    // PROYECTOR
     if (limpio === "proyector") {
       socket.join("sala_proyeccion");
       socket.emit("vistas", "PROYECTOR");
@@ -70,35 +73,32 @@ io.on("connection", (socket) => {
       return;
     }
 
-    // ADMIN
     if (limpio === "anderson") {
       socket.join("sala_admin");
       socket.emit("vistas", "ADMIN");
       return;
     }
 
-    // JUGADOR NORMAL
-    const jugador = {
+    jugadores.push({
       id: socket.id,
       nombre,
       eliminado: false,
       rol: ""
-    };
-
-    jugadores.push(jugador);
+    });
 
     socket.emit("vistas", "JUGADOR");
     io.emit("actualizarLista", jugadores.length);
     io.to("sala_proyeccion").emit("listaInicialProyeccion", jugadores);
-
-    console.log("👤 Entró:", nombre);
   });
 
   /* ----------- INICIAR PARTIDA ----------- */
   socket.on("iniciarRonda", () => {
     if (jugadores.length < 3) return;
 
-    // Reset
+    ronda = 1;
+    votos = {};
+    enVotacion = false;
+
     jugadores.forEach(j => {
       j.eliminado = false;
       j.rol = "CIUDADANO";
@@ -123,23 +123,115 @@ io.on("connection", (socket) => {
 
     io.to("sala_proyeccion").emit("pantallaEstado", "JUEGO_INICIADO");
 
-    console.log("🎮 Partida iniciada | Frase:", palabraActual);
+    // Después de 15s se abre votación
+    setTimeout(() => abrirVotacion(), 15000);
   });
 
-  /* ----------- SALIR ----------- */
+  /* ----------- VOTAR ----------- */
+  socket.on("votarJugador", (idVotado) => {
+    if (!enVotacion) return;
+
+    const votante = jugadores.find(j => j.id === socket.id);
+    if (!votante || votante.eliminado) return;
+
+    if (!votos[idVotado]) votos[idVotado] = [];
+    if (votos[idVotado].includes(socket.id)) return;
+
+    votos[idVotado].push(socket.id);
+
+    const totalVotos = Object.values(votos).flat().length;
+    const activos = jugadores.filter(j => !j.eliminado).length;
+
+    io.to("sala_proyeccion").emit(
+      "actualizarVotosProyeccion",
+      Object.fromEntries(
+        Object.entries(votos).map(([k, v]) => [k, v.length])
+      )
+    );
+
+    if (totalVotos >= activos) {
+      cerrarVotacion();
+    }
+  });
+
+  /* ----------- DESCONECTAR ----------- */
   socket.on("disconnect", () => {
     jugadores = jugadores.filter(j => j.id !== socket.id);
     io.emit("actualizarLista", jugadores.length);
     io.to("sala_proyeccion").emit("listaInicialProyeccion", jugadores);
-    console.log("🔴 Desconectado:", socket.id);
   });
 });
+
+/* =========================
+   FUNCIONES DE JUEGO
+========================= */
+function abrirVotacion() {
+  enVotacion = true;
+  votos = {};
+
+  io.emit(
+    "faseVotacion",
+    jugadores.filter(j => !j.eliminado)
+  );
+  io.to("sala_proyeccion").emit("pantallaEstado", "VOTACION_ABIERTA");
+}
+
+function cerrarVotacion() {
+  enVotacion = false;
+
+  let expulsadoId = null;
+  let max = 0;
+
+  for (const id in votos) {
+    if (votos[id].length > max) {
+      max = votos[id].length;
+      expulsadoId = id;
+    }
+  }
+
+  const expulsado = jugadores.find(j => j.id === expulsadoId);
+  if (expulsado) expulsado.eliminado = true;
+
+  // ATRAPARON IMPOSTOR
+  if (expulsadoId === impostorId) {
+    io.to("sala_proyeccion").emit("resultadoFinalProyeccion", {
+      expulsado: expulsado.nombre,
+      esImpostor: true
+    });
+    return;
+  }
+
+  // RONDA 1 → RONDA 2
+  if (ronda === 1) {
+    ronda = 2;
+
+    io.to("sala_proyeccion").emit("resultadoFinalProyeccion", {
+      expulsado: expulsado.nombre,
+      esImpostor: false
+    });
+
+    setTimeout(() => {
+      abrirVotacion();
+    }, 10000);
+
+    return;
+  }
+
+  // RONDA 2 → GANA IMPOSTOR
+  const imp = jugadores.find(j => j.id === impostorId);
+
+  io.to("sala_proyeccion").emit("resultadoFinalProyeccion", {
+    expulsado: imp.nombre,
+    esImpostor: false,
+    frase: palabraActual
+  });
+}
 
 /* =========================
    PUERTO
 ========================= */
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log("✅ Servidor completo en puerto", PORT);
+  console.log("✅ Servidor final listo en puerto", PORT);
 });
 
