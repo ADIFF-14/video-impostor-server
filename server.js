@@ -205,7 +205,7 @@ io.on('connection', (socket) => {
     }
 
     io.emit('resultadoVotacion', {
-      mensaje: "😈 El impostor ganó",
+      mensaje: "El impostor ganó",
       palabraReal: palabraActual
     });
   }
