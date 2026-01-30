@@ -1,56 +1,55 @@
-    showScreen("turnScreen");
-    document.getElementById("currentSpeakerName").innerText = data.nombre;
-    document.getElementById("btnFinalizarTurno").style.display =
-      (socket.id === data.idSocket) ? "block" : "none";
+const socket = io();
+
+// ELEMENTOS
+const btnEntrar = document.getElementById("btnEntrar");
+const btnIniciar = document.getElementById("btnIniciar");
+const btnDebate = document.getElementById("btnDebate");
+
+const inputName = document.getElementById("userName");
+const screenWelcome = document.getElementById("welcome");
+const screenWaiting = document.getElementById("waiting");
+
+const countSpan = document.getElementById("count");
+const estadoP = document.getElementById("estado");
+
+// ENTRAR
+btnEntrar.addEventListener("click", () => {
+  const nombre = inputName.value.trim();
+  if (!nombre) return alert("Escribe tu nombre");
+  console.log("➡️ ENTRANDO:", nombre);
+  socket.emit("unirse", { nombre });
 });
 
-socket.on('faseVotacion', (vivos) => {
-    showScreen("end");
-    const lista = document.getElementById("lista-votacion");
-    lista.innerHTML = esAdmin ? "Votación en curso..." : "";
+// RESPUESTA DEL SERVER
+socket.on("vistas", (tipo) => {
+  screenWelcome.classList.remove("active");
+  screenWaiting.classList.add("active");
 
-    if (!esAdmin) {
-        vivos.forEach(j => {
-            if (j.id !== socket.id) {
-                const b = document.createElement("button");
-                b.className = "btn-big";
-                b.style.background = "#333";
-                b.style.color = "white";
-                b.innerText = j.nombre;
-                b.onclick = () => {
-                    socket.emit('votarJugador', j.id);
-                    lista.innerHTML = "Voto enviado";
-                };
-                lista.appendChild(b);
-            }
-        });
-    }
+  if (tipo === "ADMIN") {
+    btnIniciar.style.display = "block";
+    btnDebate.style.display = "block";
+  }
 });
 
-socket.on('resultadoVotacion', (res) => {
-    showScreen("result");
-    document.getElementById("texto-res").innerText = res.mensaje;
-
-    if (res.palabraReal) {
-        document.getElementById("texto-palabra").innerText =
-          "La frase era: " + res.palabraReal;
-    }
-
-    // ✅ EL ADMIN SIEMPRE PUEDE INICIAR NUEVA PARTIDA
-    if (esAdmin) {
-        document.getElementById("btn-reiniciar").style.display = "block";
-    }
+// CONTADOR
+socket.on("actualizarLista", (n) => {
+  countSpan.innerText = n;
 });
 
-function showScreen(id) {
-    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-    const target = document.getElementById(id);
-    if (target) target.classList.add("active");
-}
-
-socket.on('actualizarLista', (n) => {
-    document.getElementById("count").innerText = n;
+// BOTONES ADMIN
+btnIniciar.addEventListener("click", () => {
+  socket.emit("iniciarRonda");
 });
+
+btnDebate.addEventListener("click", () => {
+  socket.emit("empezarDebate");
+});
+
+// ESTADO GENERAL
+socket.on("estado", (msg) => {
+  estadoP.innerText = msg;
+});
+
 
 
 
