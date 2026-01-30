@@ -16,7 +16,6 @@ let rondaActual = 1;
 
 /* =========================
    BANCO DE FRASES BÍBLICAS
-   (ÚNICO CAMBIO)
 ========================= */
 const palabras = [
   "Biblia",
@@ -116,10 +115,24 @@ io.on('connection', (socket) => {
     io.to('sala_proyeccion').emit('pantallaEstado', 'JUEGO_INICIADO');
   });
 
+  /* =========================
+     DEBATE (IMPOSTOR NO PRIMERO)
+  ========================= */
   socket.on('empezarDebateOficial', () => {
     indiceTurno = 0;
     const vivos = jugadores.filter(j => !j.eliminado);
     ordenHablar = mezclar([...vivos]);
+
+    // 🔒 ASEGURAR QUE EL IMPOSTOR NO HABLE PRIMERO
+    if (ordenHablar.length > 1 && ordenHablar[0].rol === "IMPOSTOR") {
+      for (let i = 1; i < ordenHablar.length; i++) {
+        if (ordenHablar[i].rol !== "IMPOSTOR") {
+          [ordenHablar[0], ordenHablar[i]] = [ordenHablar[i], ordenHablar[0]];
+          break;
+        }
+      }
+    }
+
     notificarTurno();
   });
 
@@ -198,6 +211,17 @@ io.on('connection', (socket) => {
         indiceTurno = 0;
         const vivos = jugadores.filter(j => !j.eliminado);
         ordenHablar = mezclar([...vivos]);
+
+        // 🔒 TAMBIÉN EN RONDA 2
+        if (ordenHablar.length > 1 && ordenHablar[0].rol === "IMPOSTOR") {
+          for (let i = 1; i < ordenHablar.length; i++) {
+            if (ordenHablar[i].rol !== "IMPOSTOR") {
+              [ordenHablar[0], ordenHablar[i]] = [ordenHablar[i], ordenHablar[0]];
+              break;
+            }
+          }
+        }
+
         notificarTurno();
       }, 8000);
 
