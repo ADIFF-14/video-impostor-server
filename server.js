@@ -6,9 +6,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-/* =========================
-   FRONTEND
-========================= */
+// SERVIR FRONTEND (CRÍTICO)
 app.use(express.static("public"));
 
 /* =========================
@@ -19,9 +17,9 @@ let palabraActual = null;
 let impostorId = null;
 
 /* =========================
-   FRASES (NO SE REPITEN)
+   FRASES BÍBLICAS (TUS FRASES)
 ========================= */
-let frasesDisponibles = [
+const frases = [
   "Biblia",
   "Cielo",
   "Mar Rojo",
@@ -49,9 +47,7 @@ let frasesDisponibles = [
 ];
 
 function obtenerFrase() {
-  if (frasesDisponibles.length === 0) return "Biblia";
-  const i = Math.floor(Math.random() * frasesDisponibles.length);
-  return frasesDisponibles.splice(i, 1)[0];
+  return frases[Math.floor(Math.random() * frases.length)];
 }
 
 /* =========================
@@ -60,7 +56,7 @@ function obtenerFrase() {
 io.on("connection", (socket) => {
   console.log("🟢 Conectado:", socket.id);
 
-  /* ----------- UNIRSE ----------- */
+  /* ----------- ENTRAR ----------- */
   socket.on("unirse", ({ nombre }) => {
     if (!nombre) return;
 
@@ -81,7 +77,7 @@ io.on("connection", (socket) => {
       return;
     }
 
-    // JUGADOR
+    // JUGADOR NORMAL
     const jugador = {
       id: socket.id,
       nombre,
@@ -95,7 +91,7 @@ io.on("connection", (socket) => {
     io.emit("actualizarLista", jugadores.length);
     io.to("sala_proyeccion").emit("listaInicialProyeccion", jugadores);
 
-    console.log("👤 Jugador:", nombre);
+    console.log("👤 Entró:", nombre);
   });
 
   /* ----------- INICIAR PARTIDA ----------- */
@@ -130,7 +126,7 @@ io.on("connection", (socket) => {
     console.log("🎮 Partida iniciada | Frase:", palabraActual);
   });
 
-  /* ----------- DESCONECTAR ----------- */
+  /* ----------- SALIR ----------- */
   socket.on("disconnect", () => {
     jugadores = jugadores.filter(j => j.id !== socket.id);
     io.emit("actualizarLista", jugadores.length);
@@ -144,5 +140,6 @@ io.on("connection", (socket) => {
 ========================= */
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log("✅ Servidor completo corriendo en puerto", PORT);
+  console.log("✅ Servidor completo en puerto", PORT);
 });
+
