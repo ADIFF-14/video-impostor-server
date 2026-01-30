@@ -1,12 +1,16 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
 app.use(express.static('public'));
 
+/* =========================
+   ESTADO GLOBAL
+========================= */
 let jugadores = [];
 let ordenHablar = [];
 let indiceTurno = 0;
@@ -14,9 +18,34 @@ let palabraActual = "";
 let votosRecibidos = {};
 let rondaActual = 1;
 
+/* =========================
+   FRASES BÍBLICAS
+========================= */
 const palabras = [
-  "Pizza","Avión","WhatsApp","Netflix","Fútbol","Cine","Playa","Gato",
-  "Reloj","Bicicleta","Hamburguesa","Internet","Instagram","Parque","Café"
+  "Biblia",
+  "Cielo",
+  "Mar Rojo",
+  "Goliat",
+  "Pesebre",
+  "Judas",
+  "Zaqueo",
+  "Jonás",
+  "Ángeles",
+  "Jesús",
+  "Daniel",
+  "Los 3 Jóvenes Hebreos",
+  "El Arca de Noé",
+  "El Jardín del Edén",
+  "La Torre de Babel",
+  "Multiplicación de Panes",
+  "El Maná",
+  "Los Diez Mandamientos",
+  "El Día de Pentecostés",
+  "El Río Jordán",
+  "El Árbol de la Vida",
+  "El Mar de Cristal",
+  "La Nueva Jerusalén",
+  "El Joven Rico"
 ];
 
 function mezclar(array) {
@@ -27,19 +56,25 @@ function mezclar(array) {
   return array;
 }
 
+/* =========================
+   SOCKETS
+========================= */
 io.on('connection', (socket) => {
 
+  /* ----------- ENTRAR ----------- */
   socket.on('unirse', (datos) => {
     const nombre = datos.nombre.toLowerCase().trim();
 
     if (nombre === 'proyector') {
       socket.join('sala_proyeccion');
-      return socket.emit('vistas', 'PROYECTOR');
+      socket.emit('vistas', 'PROYECTOR');
+      return;
     }
 
     if (nombre === 'anderson') {
       socket.join('sala_admin');
-      return socket.emit('vistas', 'ADMIN');
+      socket.emit('vistas', 'ADMIN');
+      return;
     }
 
     jugadores.push({
@@ -54,6 +89,7 @@ io.on('connection', (socket) => {
     io.to('sala_proyeccion').emit('listaInicialProyeccion', jugadores);
   });
 
+  /* ----------- INICIAR PARTIDA ----------- */
   socket.on('iniciarRonda', () => {
     if (jugadores.length < 3) return;
 
@@ -82,14 +118,10 @@ io.on('connection', (socket) => {
       }
     });
 
-    io.to('sala_admin').emit('infoSecretaAdmin', {
-      jugadores,
-      palabra: palabraActual
-    });
-
     io.to('sala_proyeccion').emit('pantallaEstado', 'JUEGO_INICIADO');
   });
 
+  /* ----------- DEBATE ----------- */
   socket.on('empezarDebateOficial', () => {
     indiceTurno = 0;
     const vivos = jugadores.filter(j => !j.eliminado);
@@ -116,6 +148,7 @@ io.on('connection', (socket) => {
     }
   }
 
+  /* ----------- VOTAR ----------- */
   socket.on('votarJugador', (idVotado) => {
     if (!votosRecibidos[idVotado]) votosRecibidos[idVotado] = [];
     votosRecibidos[idVotado].push(socket.id);
@@ -135,6 +168,7 @@ io.on('connection', (socket) => {
     }
   });
 
+  /* ----------- RESULTADO ----------- */
   function procesarVotacion() {
     let expId = null;
     let max = 0;
@@ -164,7 +198,6 @@ io.on('connection', (socket) => {
       return;
     }
 
-    // 🔁 RONDA 2 AUTOMÁTICA
     if (rondaActual === 1) {
       rondaActual = 2;
       votosRecibidos = {};
@@ -179,7 +212,15 @@ io.on('connection', (socket) => {
       return;
     }
 
-    //  IMPOSTOR GANA
+    const impostor = jugadores.find(j => j.rol === "IMPOSTOR");
+
+    io.to('sala_proyeccion').emit('resultadoFinalProyeccion', {
+      expulsado: impostor.nombre,
+      esImpostor: true,
+      frase: palabraActual,
+      ganoImpostor: true
+    });
+
     io.emit('resultadoVotacion', {
       mensaje: " El impostor ganó",
       palabraReal: palabraActual
@@ -193,3 +234,4 @@ io.on('connection', (socket) => {
 });
 
 server.listen(process.env.PORT || 3000);
+
